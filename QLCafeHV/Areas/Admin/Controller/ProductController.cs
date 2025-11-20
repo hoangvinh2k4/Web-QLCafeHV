@@ -1,0 +1,157 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using QLCafeHV.Models;
+using QLCafeHV.Models.DbConnect;
+
+namespace QLCafeHV.Areas.Admin.Controllers
+{
+    [Area("Admin")]
+    public class ProductController : Controller
+    {
+        private readonly CoffeeContext _context;
+
+        public ProductController(CoffeeContext context)
+        {
+            _context = context;
+        }
+        public IActionResult Index()
+        {
+            var list = _context.Products.ToList();
+            return View(list);
+        }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Create(ProductModel product)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Dữ liệu nhập chưa hợp lệ!" });
+
+            var file = Request.Form.Files.FirstOrDefault();
+            if (file != null && file.Length > 0)
+            {
+                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                string path = Path.Combine(folder, fileName);
+
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    file.CopyTo(stream);
+                }
+
+                product.ImageUrl = "/images/" + fileName;
+            }
+            else
+            {
+                return Json(new { success = false, message = "Vui lòng chọn ảnh sản phẩm!" });
+            }
+
+            product.CreatedTime = DateTime.Now;
+            if (string.IsNullOrEmpty(product.Status))
+                product.Status = "Còn bán";
+
+            try
+            {
+                _context.Products.Add(product);
+                _context.SaveChanges();
+
+                return Json(new { success = true, message = "Thêm sản phẩm thành công!" });
+            }
+            catch
+            {
+                return Json(new { success = false, message = "Đã xảy ra lỗi khi thêm sản phẩm!" });
+            }
+        }
+
+
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var product = _context.Products.FirstOrDefault(p => p.ProductID == id);
+            if (product == null)
+            {
+                TempData["Error"] = "Sản phẩm không tồn tại!";
+                return RedirectToAction("Index");
+            }
+            return View(product);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, ProductModel model)
+        {
+            if (id != model.ProductID)
+                return Json(new { success = false, message = "Sai ID sản phẩm!" });
+
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Dữ liệu không hợp lệ!" });
+
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+                return Json(new { success = false, message = "Sản phẩm không tồn tại!" });
+
+            // update field cơ bản
+            product.ProductName = model.ProductName;
+            product.Category = model.Category;
+            product.Price = model.Price;
+            product.Status = model.Status;
+            product.UpdatedTime = DateTime.Now;
+
+            // file upload
+            var file = Request.Form.Files.FirstOrDefault();
+            if (file != null)
+            {
+                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                string filePath = Path.Combine(folder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                product.ImageUrl = "/images/" + fileName;
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Cập nhật thành công!" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+                return Json(new { success = false, message = "Sản phẩm không tồn tại!" });
+
+            // Xóa ảnh nếu có
+            if (!string.IsNullOrEmpty(product.ImageUrl))
+            {
+                string imagePath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    product.ImageUrl.TrimStart('/'));
+
+                if (System.IO.File.Exists(imagePath))
+                    System.IO.File.Delete(imagePath);
+            }
+
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Xóa sản phẩm thành công!" });
+        }
+
+
+    }
+}

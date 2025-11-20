@@ -1,0 +1,298 @@
+/* Reset c? b?n */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+}
+
+/* Thanh top menu */
+.top-menu {
+    display: flex;
+    align-items: center;
+    background: #0071ce;
+    color: white;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+
+    .top-menu > div, .top-menu button {
+        margin-right: 16px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .top-menu .active-tab {
+        background: #005ea0;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+/* Ch?n danh m?c món */
+.category-bar {
+    margin: 8px 0;
+    display: flex;
+    gap: 12px;
+    padding-left: 12px;
+}
+
+    .category-bar button {
+        background: #e4e9ef;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: normal;
+        color: #444;
+    }
+
+        .category-bar button.active {
+            background: #cde6ff;
+            font-weight: 700;
+            color: #0071ce;
+        }
+
+/* Thanh tìm ki?m */
+.search-box {
+    padding: 0 12px 12px;
+}
+
+    .search-box input {
+        width: 100%;
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+
+/* Container chính: left + right */
+.container {
+    display: flex;
+    gap: 12px;
+    padding: 0 12px 20px;
+}
+
+/* Danh sách món ?n (grid) */
+.food-list {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.food-item {
+    background: white;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    position: relative;
+    box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    transition: transform 0.15s ease-in-out;
+}
+
+    .food-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    }
+
+    .food-item img {
+        width: 100%;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 6px;
+        margin-bottom: 4px;
+    }
+
+.price-tag {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #0071ce;
+    color: white;
+    padding: 2px 6px;
+    font-size: 12px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+/* B?ng order bên ph?i */
+.order-panel {
+    width: 370px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+    table th, table td {
+        border-bottom: 1px solid #ddd;
+        padding: 8px 6px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    table th {
+        background: #f1f8ff;
+        font-weight: 600;
+        color: #222;
+    }
+
+    table td:first-child {
+        text-align: left;
+        padding-left: 10px;
+    }
+
+.quantity-input {
+    width: 45px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 2px;
+    font-size: 13px;
+    color: #333;
+    background-color: #f5faff;
+    transition: background-color 0.2s ease;
+}
+
+    .quantity-input:focus {
+        background-color: white;
+        outline: 2px solid #0071ce;
+    }
+
+.highlight-row {
+    background: #cde6ff;
+    font-weight: 600;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #666;
+    padding: 2px 4px;
+}
+
+    .action-btn:hover {
+        color: red;
+    }
+
+/* Ph?n d??i b?ng order */
+.order-footer {
+    padding: 8px 6px;
+    font-size: 14px;
+    border-top: 1px solid #ccc;
+    margin-top: 6px;
+    font-weight: 700;
+    color: #222;
+}
+
+    .order-footer .row {
+        display: flex;
+        justify-content: space-between;
+        margin: 4px 0;
+    }
+
+        .order-footer .row div:first-child {
+            font-weight: 600;
+        }
+
+/* Các checkbox */
+.checkbox-group {
+    margin: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+}
+
+    .checkbox-group label {
+        font-weight: normal;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        user-select: none;
+    }
+
+    .checkbox-group input[type="number"] {
+        width: 50px;
+        padding: 2px;
+        margin-left: auto;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-size: 13px;
+        background-color: #f5f5f5;
+        transition: background-color 0.2s ease;
+    }
+
+        .checkbox-group input[type="number"]:focus {
+            background-color: white;
+            outline: 2px solid #0071ce;
+        }
+
+/* Các nút ch?c n?ng d??i cùng */
+.bottom-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px solid #ddd;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 4px;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.btn-red {
+    background: #e45050;
+    color: white;
+}
+
+    .btn-red:hover {
+        background: #cc3f3f;
+    }
+
+.btn-blue {
+    background: #0071ce;
+    color: white;
+}
+
+    .btn-blue:hover {
+        background: #005ea0;
+    }
+
+.btn-orange {
+    background: #f18a07;
+    color: white;
+}
+
+    .btn-orange:hover {
+        background: #b56b05;
+    }

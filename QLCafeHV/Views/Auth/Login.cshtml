@@ -1,0 +1,35 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - CukCuk Admin</title>
+    <link rel="stylesheet" href="~/css/auth.css" />
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="~/images/logo.jpg" alt="Logo" class="logo" />
+                <h2>Đăng nhập hệ thống</h2>
+                <p>Quản lý quán café chuyên nghiệp cùng Hoàng Vinh</p>
+            </div>
+            <form method="post" asp-action="Login" class="auth-form">
+                <div class="input-group">
+                    <label for="username">Tên đăng nhập</label>
+                    <input type="text" id="username" name="username" required />
+                </div>
+                <div class="input-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" name="password" required />
+                </div>
+                <button type="submit" class="btn-primary">Đăng nhập</button>
+                <p class="switch-form">Chưa có tài khoản? <a asp-action="Register">Đăng ký ngay</a></p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

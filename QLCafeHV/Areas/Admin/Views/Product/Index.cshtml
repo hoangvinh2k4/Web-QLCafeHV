@@ -1,0 +1,108 @@
+﻿@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Dashboard";
+}
+@model List<QLCafeHV.Models.ProductModel>
+
+<h2>Danh sách sản phẩm</h2>
+
+<a asp-area="Admin" asp-controller="Product" asp-action="Create" class="btn btn-primary mb-3">
+    + Thêm sản phẩm
+</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Ảnh</th>
+            <th>Tên</th>
+            <th>Danh mục</th>
+            <th>Giá</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Ngày chỉnh sửa</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" width="80" style="border-radius:5px;" />
+                    }
+                </td>
+                <td>@item.ProductName</td>
+                <td>@item.Category</td>
+                <td>@item.Price.ToString("N0") đ</td>
+                <td>@item.Status</td>
+                <td>@item.CreatedTime.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@(item.UpdatedTime.HasValue? item.UpdatedTime.Value.ToString("dd/MM/yyyy HH:mm") : "-")</td>
+
+                <td>
+                    <!-- Edit -->
+                    <a asp-area="Admin" asp-controller="Product" asp-action="Edit" asp-route-id="@item.ProductID" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i>
+                    </a>
+
+                    <!-- Delete -->
+                    <button class="btn btn-sm btn-danger btnDelete" data-id="@item.ProductID">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $(".btnDelete").click(function () {
+            var id = $(this).data("id");
+            var row = $(this).closest("tr");
+
+            Swal.fire({
+                title: 'Bạn có chắc muốn xóa?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Có',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Product", new { area = "Admin" })',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Thành công!',
+                                    text: res.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                row.remove();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Lỗi!',
+                                    text: res.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi server',
+                                text: 'Không thể xóa sản phẩm!'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
+

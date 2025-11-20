@@ -1,0 +1,51 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - CukCuk Admin</title>
+    <link rel="stylesheet" href="~/css/auth.css" />
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="~/images/logo.jpg" alt="Logo" class="logo" />
+                <h2>Tạo tài khoản mới</h2>
+                <p>Tham gia hệ thống quản lý CukCuk dễ dàng</p>
+            </div>
+            <form method="post" asp-action="Register" class="auth-form">
+                <div class="input-group">
+                    <label for="username">Tên đăng nhập</label>
+                    <input type="text" id="username" name="username" required />
+                </div>
+                <div class="input-group">
+                    <label for="fullname">Họ và tên</label>
+                    <input type="text" id="fullname" name="fullname" required />
+                </div>             
+                <div class="input-group">
+                    <label for="phone">Số điện thoại</label>
+                    <input type="text" id="phone" name="phone" required />
+                </div>             
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required />
+                </div>             
+                <div class="input-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" name="password" required />
+                </div>
+                <div class="input-group">
+                    <label for="confirm">Xác nhận mật khẩu</label>
+                    <input type="password" id="confirm" name="confirm" required />
+                </div>
+                <button type="submit" class="btn-primary">Đăng ký</button>
+                <p class="switch-form">Đã có tài khoản? <a asp-action="Login">Đăng nhập</a></p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

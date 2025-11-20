@@ -1,0 +1,120 @@
+﻿@model QLCafeHV.Models.ProductModel
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+}
+
+<h2>Chỉnh sửa sản phẩm</h2>
+
+<form id="editForm" enctype="multipart/form-data">
+    <input type="hidden" asp-for="ProductID" />
+
+    <div class="form-group">
+        <label>Tên sản phẩm</label>
+        <input asp-for="ProductName" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Danh mục</label>
+        <input asp-for="Category" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Giá</label>
+        <input asp-for="Price" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Trạng thái</label>
+        <select asp-for="Status" class="form-control">
+            <option value="Còn bán">Còn bán</option>
+            <option value="Ngừng bán">Ngừng bán</option>
+        </select>
+    </div>
+
+    <!-- Thêm input file để chọn ảnh mới -->
+    <div class="form-group">
+        <label>Chọn ảnh mới</label>
+        <input type="file" name="ImageFile" class="form-control" id="imageInput" />
+    </div>
+
+    <div class="form-group mt-2">
+        <label>Ảnh hiện tại</label><br />
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img id="previewImage" src="@Model.ImageUrl"
+                 style="max-width:150px; border-radius:5px;" />
+        }
+        else
+        {
+            <img id="previewImage" src="#" style="max-width:150px; display:none; border-radius:5px;" />
+        }
+    </div>
+
+    <button type="button" id="btnSave" class="btn btn-primary mt-3">Cập nhật sản phẩm</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.getElementById("imageInput").addEventListener("change", function (event) {
+            var preview = document.getElementById("previewImage");
+            var file = event.target.files[0];
+
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = "block";
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        $("#btnSave").click(function () {
+
+            let form = $("#editForm")[0];
+            let formData = new FormData(form);
+
+            $.ajax({
+                url: "@Url.Action("Edit", "Product", new { area = "Admin" })",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+
+                    if (res.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Thành công!",
+                            text: res.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        setTimeout(() => {
+                            window.location.href = '@Url.Action("Index", "Product", new { area = "Admin" })';
+                        }, 1500);
+
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi!",
+                            text: res.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi server",
+                        text: "Không gửi được dữ liệu!"
+                    });
+                }
+            });
+        });
+
+    </script>
+}
+

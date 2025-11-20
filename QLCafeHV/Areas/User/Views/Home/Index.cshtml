@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>Giao diện Order Món</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="~/css/user.css" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="container">
+        <!-- PHẦN BÊN TRÁI: Khung chọn món -->
+        <div class="menu-panel">
+            <div class="header-tabs">
+                <button class="tab active" data-category="all">Tất cả</button>
+                <button class="tab" data-category="bia">Bia</button>
+                <button class="tab" data-category="cafe">Cafe</button>
+                <button class="tab" data-category="comtrua">Cơm TRƯA</button>
+                <button class="tab" data-category="haisan">HẢI SẢN</button>
+                <button class="tab" data-category="karaoke">Karaoke</button>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Tìm sản phẩm (F3)" />
+            </div>
+
+            <div class="sub-categories">
+                <button class="sub-cat active" data-subcat="all">Nguyên liệu</button>
+                <button class="sub-cat" data-subcat="nuoc-co">Nước có cồn</button>
+                <button class="sub-cat" data-subcat="nuoc-ngot">Nước ngọt</button>
+                <button class="sub-cat" data-subcat="nuoc-trai-cay">Nước trái cây</button>
+                <button class="sub-cat" data-subcat="sinh-to">Sinh tố</button>
+            </div>
+
+            <div class="product-list" id="productList">
+                <!-- Các sản phẩm sẽ được hiển thị ở đây -->
+            </div>
+
+            <div class="pagination">
+                <span id="pageInfo">1/15</span>
+            </div>
+        </div>
+
+        <!-- PHẦN BÊN PHẢI: Bảng order -->
+        <div class="order-panel">
+            <div class="order-header">
+                <div>Phòng ban 1 - Hóa đơn 1</div>
+                <div class="customer-info">Khách hàng (F4)</div>
+            </div>
+            <div class="order-list" id="orderList">
+                <!-- Món được thêm sẽ hiển thị tại đây -->
+            </div>
+            <div class="order-total">
+                Tổng tiền: <span id="totalMoney">0</span>
+            </div>
+
+            <div class="order-actions">
+                <button class="btn btn-print">In</button>
+                <button class="btn btn-pay">Thanh toán (F9)</button>
+                <button class="btn btn-notify">Thông báo</button>
+                <button class="btn btn-transfer">Chuyển ghép bàn</button>
+            </div>
+
+            <div class="order-footer">
+                <label><input type="checkbox" id="checkCustomer"> Hỗ trợ khách hàng 1000 6162</label><br />
+                <label><input type="checkbox" id="checkStore"> Chi nhánh cơ sở hàng: testnb</label>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>Order</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link href="~/css/style.css" rel="stylesheet" />
+</head>
+<body>
+
+    <!-- Thanh menu trên cùng -->
+    <div class="top-menu">
+        <div title="Trang chủ">🏠</div>
+        <div class="active-tab">Order</div>
+        <div>Sổ giao hàng</div>
+        <div style="flex-grow:1"></div>
+        <div title="Thêm">＋</div>
+        <div>ORDER ▼</div>
+        <div>☰</div>
+        <div>🌐</div>
+        <div>⬇️</div>
+        <div>⟲</div>
+        <div>✋</div>
+        <div>👤</div>
+    </div>
+
+    <!-- Thanh chọn danh mục món -->
+    <div class="category-bar">
+        <button class="active" data-type="fav">❤️ Hay dùng</button>
+        <button data-type="food">🍽 Món ăn</button>
+        <button data-type="drink">🥤 Đồ uống</button>
+        <button data-type="other">🧩 Khác</button>
+    </div>
+
+    <!-- Thanh tìm kiếm -->
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Nhập mã/Tên món cần tìm..." />
+    </div>
+
+    <!-- Khu vực nội dung chính -->
+    <div class="container">
+
+        <!-- Danh sách món ăn (bên trái) -->
+        <div class="food-list" id="foodList">
+            <!-- Món ăn với ảnh và giá -->
+            <div class="food-item">
+                <img src="https://i.imgur.com/3FmuUSl.jpg" alt="Đậu phụ rán">
+                <div class="price-tag">5K</div>
+                <div>Đậu phụ rán</div>
+            </div>
+
+            <div class="food-item">
+                <img src="https://i.imgur.com/PlvZBzW.jpg" alt="Thịt gà kho">
+                <div class="price-tag">10K</div>
+                <div>Thịt gà kho</div>
+            </div>
+
+            <div class="food-item">
+                <img src="https://i.imgur.com/j6LzN6y.jpg" alt="Tôm rim mặn">
+                <div class="price-tag">15K</div>
+                <div>Tôm rim mặn</div>
+            </div>
+
+            <div class="food-item">
+                <img src="https://i.imgur.com/fkUtwCD.jpg" alt="Cơm gà quay">
+                <div class="price-tag">45K</div>
+                <div>Cơm gà quay</div>
+            </div>
+
+            <div class="food-item">
+                <img src="https://i.imgur.com/Yb2lNKy.jpg" alt="Bò húc">
+                <div class="price-tag">15K</div>
+                <div>Bò húc</div>
+            </div>
+
+            <div class="food-item">
+                <img src="https://i.imgur.com/pMu5ipH.jpg" alt="Thịt ba chỉ kho tàu">
+                <div class="price-tag">15K</div>
+                <div>Thịt ba chỉ kho tàu</div>
+            </div>
+
+            <div class="food-item">
+                <img src="https://i.imgur.com/Xmeo9Cd.jpg" alt="Cải xanh xào thịt hộp">
+                <div class="price-tag">30K</div>
+                <div>Cải xanh xào thịt hộp</div>
+            </div>
+
+            <div class="food-item">
+                <img src="https://i.imgur.com/6dkSPrX.jpg" alt="C2">
+                <div class="price-tag">15K</div>
+                <div>C2</div>
+            </div>
+
+            <div class="food-item">
+                <img src="https://i.imgur.com/s7mwlLZ.jpg" alt="Cá lóc kho tộ">
+                <div class="price-tag">15K</div>
+                <div>Cá lóc kho tộ</div>
+            </div>
+        </div>
+
+        <!-- Bảng order món (bên phải) -->
+        <div class="order-panel">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên món</th>
+                        <th>SL</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align:left;">Đậu phụ rán</td>
+                        <td><input class="quantity-input" type="number" value="1.00" min="1"></td>
+                        <td>5,000</td>
+                        <td>5,000</td>
+                        <td><button class="action-btn" title="Quà tặng 🎁">🎁</button></td>
+                        <td><button class="action-btn" title="Xóa ❌">❌</button></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">Thịt gà kho</td>
+                        <td><input class="quantity-input" type="number" value="2.00" min="1"></td>
+                        <td>10,000</td>
+                        <td>20,000</td>
+                        <td><button class="action-btn" title="Quà tặng 🎁">🎁</button></td>
+                        <td><button class="action-btn" title="Xóa ❌">❌</button></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left;">Tôm rim mặn</td>
+                        <td><input class="quantity-input" type="number" value="1.00" min="1"></td>
+                        <td>15,000</td>
+                        <td>15,000</td>
+                        <td><button class="action-btn" title="Quà tặng 🎁">🎁</button></td>
+                        <td><button class="action-btn" title="Xóa ❌">❌</button></td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td style="text-align:left;">Cơm gà quay</td>
+                        <td><input class="quantity-input" type="number" value="1.00" min="1"></td>
+                        <td>45,000</td>
+                        <td>45,000</td>
+                        <td><button class="action-btn" title="Quà tặng 🎁">🎁</button></td>
+                        <td><button class="action-btn" title="Xóa ❌">❌</button></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Các nút chức năng dưới bảng order -->
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <button class="action-btn" title="Quà tặng 🎁" style="font-size:18px;">🎁</button>
+                <button class="action-btn" title="Khuyến mãi 🎁" style="font-size:18px;">🎀</button>
+                <button class="action-btn" title="Khách hàng 🛒" style="font-size:18px;">🛒</button>
+                <button class="action-btn" title="Tính tiền ⏱" style="font-size:18px;">⏱</button>
+                <input type="number" min="1" placeholder="Số chờ..." style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid #ccc;">
+                <button title="Lên" style="font-size: 20px; padding: 4px 8px;">⬆️</button>
+                <button title="Xuống" style="font-size: 20px; padding: 4px 8px;">⬇️</button>
+            </div>
+
+            <!-- Tổng tiền và các tùy chọn thuế, phí -->
+            <div style="font-weight: 700; font-size: 14px; margin-top: 8px;">
+                <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                    <div>Thành tiền</div>
+                    <div>85,000</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                    <div>Tổng thanh toán</div>
+                    <div>85,000</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                    <div>Còn phải thu</div>
+                    <div>85,000</div>
+                </div>
+
+                <div class="checkbox-group" style="margin-top: 6px;">
+                    <label><input type="checkbox" /> Phí dịch vụ 5%</label>
+                    <input type="number" value="0" min="0" style="width: 40px; margin-left: 8px;" />
+                    <label><input type="checkbox" /> Thuế GTGT 10%</label>
+                    <input type="number" value="0" min="0" style="width: 40px; margin-left: 8px;" />
+                </div>
+            </div>
+
+            <!-- Nút chức năng cuối cùng -->
+            <div class="bottom-buttons" style="margin-top: 12px;">
+                <button class="btn btn-red">Hủy bỏ</button>
+                <button class="btn btn-blue">Lưu nháp</button>
+                <button class="btn btn-orange">Thu tiền</button>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

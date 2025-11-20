@@ -1,0 +1,116 @@
+﻿@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Dashboard";
+}
+
+<h3 class="mb-4"><i class="fa-solid fa-chart-line text-primary"></i> Dashboard tổng quan</h3>
+
+<!-- 4 Cards -->
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card card-custom border-primary shadow-sm p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4>@ViewBag.TotalOrders</h4>
+                    <p>Đơn hàng hôm nay</p>
+                </div>
+                <i class="fa-solid fa-file-invoice card-icon text-primary"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-custom border-success shadow-sm p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4>@String.Format("{0:N0} đ", ViewBag.TotalRevenue)</h4>
+                    <p>Doanh thu hôm nay</p>
+                </div>
+                <i class="fa-solid fa-coins card-icon text-success"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-custom border-warning shadow-sm p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4>@ViewBag.TotalItems</h4>
+                    <p>Sản phẩm đã bán</p>
+                </div>
+                <i class="fa-solid fa-cubes card-icon text-warning"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-custom border-info shadow-sm p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4>@DateTime.Now.ToString("HH:mm")</h4>
+                    <p>Thời gian hiện tại</p>
+                </div>
+                <i class="fa-solid fa-clock card-icon text-info"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Biểu đồ -->
+<div class="card mt-4 shadow-sm">
+    <div class="card-body">
+        <h5>📈 Doanh thu 7 ngày gần nhất</h5>
+        <canvas id="revenueChart" height="100"></canvas>
+    </div>
+</div>
+
+<!-- Top sản phẩm -->
+<div class="card mt-4 shadow-sm">
+    <div class="card-body">
+        <h5>🏆 Top sản phẩm bán chạy hôm nay</h5>
+        <table class="table mt-2">
+            <thead class="table-light">
+                <tr>
+                    <th>Tên sản phẩm</th>
+                    <th>Số lượng bán</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in ViewBag.TopProducts)
+                {
+                    <tr>
+                        <td>@p.ProductName</td>
+                        <td>@p.Quantity</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [
+                @string.Join(",", ((IEnumerable<dynamic>)ViewBag.Last7DaysRevenue)
+                                        .Select(r => $"'{((DateTime)r.Date).ToString("dd/MM")}'"))
+            ],
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: [
+                    @string.Join(",", ((IEnumerable<dynamic>)ViewBag.Last7DaysRevenue)
+                                                .Select(r => r.Revenue))
+                ],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+    });
+</script>
+}
