@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>@ViewData["Title"]</title>
+    <link href="~/css/style.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
+    <link href="~/css/table.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
+    <link rel="stylesheet" href="https://kit.fontawesome.com/a076d05399.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+</head>
+<body>
+
+    <!-- Thanh menu trên cùng -->
+    <div class="top-menu">
+        <div title="Trang chủ">🏠</div>
+        <div class="active-tab">Order</div>
+        <div>Sổ giao hàng</div>
+        <div style="flex-grow:1"></div>
+        <div title="Thêm">＋</div>
+        <div>ORDER ▼</div>
+        <div>☰</div>
+        <div>👤</div>
+        <a asp-controller="Auth" asp-action="Logout" asp-area="">
+            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+        </a>
+    </div>
+
+    <!-- Thanh chọn danh mục món -->
+    <div class="category-bar">
+        <a asp-controller="Home" asp-action="Index" asp-area="Employee" class="category-btn active">🟫 Sơ đồ</a>
+        <button data-type="drink">🥤 Đồ uống</button>
+        <button data-type="food">🍽 Món tráng miệng</button>
+        <button data-type="other">🧩 Khác</button>
+    </div>
+    <!-- Nơi render nội dung view con -->
+    @RenderBody()
+</body>
+</html>

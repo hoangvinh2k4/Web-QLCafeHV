@@ -1,0 +1,265 @@
+﻿@{
+    Layout = "~/Areas/Employee/Views/Shared/EmployeeLayout.cshtml";
+    ViewData["Title"] = "Menu sản phẩm";
+}
+<!-- Thanh tìm kiếm -->
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="Nhập mã/Tên món cần tìm..." />
+</div>
+<!-- Khu vực nội dung chính -->
+<div class="container">
+    <div class="food-list" id="foodList">
+        @foreach (var product in Model ?? new List<QLCafeHV.Models.ProductModel>())
+        {
+            <div class="food-item" data-id="@product.ProductID">
+                <img src="@product.ImageUrl" alt="@product.ProductName" />
+                <div class="price-tag">@product.Price.ToString("N0")</div>
+                <div class="food-name">@product.ProductName</div>
+            </div>
+        }
+    </div>
+
+
+    <!-- Bảng order món (bên phải) -->
+    <div class="order-panel">
+        <input type="hidden" id="OrderId" value="@ViewBag.OrderId" />
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên món</th>
+                    <th>SL</th>
+                    <th>Đơn giá</th>
+                    <th>Thành tiền</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="orderTableBody">
+                @if (ViewBag.OrderItems != null)
+                {
+                    foreach (var item in ViewBag.OrderItems)
+                    {
+                        <tr>
+                            <td>@item.name</td>
+                            <td>
+                                <div class="qty-control" style="display:flex; align-items:center;">
+                                    <button class="btn-decrease" data-product-id="@item.productId">-</button>
+                                    <input type="number" class="qty-input" data-product-id="@item.productId" value="@item.qty" min="1" style="width:50px; text-align:center; margin:0 4px;" />
+                                    <button class="btn-increase" data-product-id="@item.productId">+</button>
+                                </div>
+                            </td>
+
+                            <td>@String.Format("{0:N0}", item.price)</td>
+                            <td>@String.Format("{0:N0}", item.total)</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger btnDelete"
+                                        data-order-id="@ViewBag.OrderId"
+                                        data-product-id="@item.productId">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <!-- Dropdown phương thức thanh toán --> 
+        <div class="mt-3 d-flex justify-content-end align-items-center"> 
+            <label for="paymentMethod" style="margin-right:10px; font-weight:500;">Phương thức thanh toán:</label> 
+            <select id="paymentMethod" class="form-select" style="width:200px;"> 
+                <option value="Tiền mặt">Tiền mặt</option> 
+                <option value="Chuyển khoản">Chuyển khoản</option>  
+            </select> 
+        </div>
+
+        <!-- Tổng tiền -->
+        <div style="font-weight: 700; font-size: 14px; margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                <div>Tổng thanh toán</div>
+                <div id="totalAmount">@String.Format("{0:N0}", ViewBag.TotalAmount ?? 0) đ</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                <div>Còn phải thu</div>
+                <div id="amountToPay">@String.Format("{0:N0}", ViewBag.TotalAmount ?? 0) đ</div>
+            </div>
+        </div>
+
+
+        <!-- Nút chức năng cuối cùng -->
+        <div class="bottom-buttons" style="margin-top: 12px;">
+            <a asp-controller="Home" asp-action="Index" asp-area="Employee" class="btn btn-red">Hủy bỏ</a>
+            <button id="btnCancelOrder" class="btn btn-orange">Hủy đơn</button>
+            <button id="btnPay" class="btn btn-blue">Thu tiền</button>
+        </div>
+
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+
+        // ====================== THÊM MÓN ======================
+        $(".food-item").click(function () {
+            var productId = $(this).data("id");
+            var orderId = $("#OrderId").val();
+
+            $.post("/Employee/Order/AddItem", { orderId: orderId, productId: productId }, function (items) {
+                renderOrderTable(items);
+            });
+        });
+
+        // ====================== XÓA MÓN ======================
+        $(document).on("click", ".btnDelete", function () {
+            var orderId = $(this).data("order-id");
+            var productId = $(this).data("product-id");
+            var row = $(this).closest("tr");
+
+            $.post("/Employee/Order/RemoveItem", { orderId: orderId, productId: productId }, function (items) {
+                row.remove();
+                Swal.fire({
+                    icon: "success",
+                    title: "Đã xóa món!",
+                    timer: 1000,
+                    showConfirmButton: false
+                });
+                renderOrderTable(items);
+            });
+        });
+
+             // ====================== HỦY ĐƠN HÀNG ======================
+    $("#btnCancelOrder").click(function () {
+        var orderId = $("#OrderId").val();
+
+        Swal.fire({
+            title: "Xác nhận hủy đơn hàng",
+            text: "Bạn có chắc chắn muốn hủy đơn hàng này?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Hủy đơn",
+            cancelButtonText: "Đóng"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                $.post("/Employee/Order/CancelOrder", { orderId: orderId }, function (res) {
+
+                    if (res.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Đơn hàng đã được hủy!",
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = "/Employee/Home/Index";
+                        });
+
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi",
+                            text: res.message
+                        });
+                    }
+
+                });
+            }
+
+        });
+    });
+
+        // ====================== CẬP NHẬT SL ======================
+        $(document).on("click", ".btn-increase", function () {
+            var productId = $(this).data("product-id");
+            var input = $(".qty-input[data-product-id='" + productId + "']");
+            input.val(parseInt(input.val()) + 1);
+            updateQuantity(productId, parseInt(input.val()));
+        });
+
+        $(document).on("click", ".btn-decrease", function () {
+            var productId = $(this).data("product-id");
+            var input = $(".qty-input[data-product-id='" + productId + "']");
+            if (parseInt(input.val()) > 1) {
+                input.val(parseInt(input.val()) - 1);
+                updateQuantity(productId, parseInt(input.val()));
+            }
+        });
+
+        $(document).on("change", ".qty-input", function () {
+            var productId = $(this).data("product-id");
+            var qty = parseInt($(this).val());
+            if (qty < 1) $(this).val(1);
+            updateQuantity(productId, parseInt($(this).val()));
+        });
+
+        function updateQuantity(productId, qty) {
+            var orderId = $("#OrderId").val();
+            $.post("/Employee/Order/UpdateQuantity", { orderId: orderId, productId: productId, quantity: qty }, function (items) {
+                renderOrderTable(items);
+            });
+        }
+
+        // ====================== RENDER ORDER TABLE ======================
+        function renderOrderTable(list) {
+            var html = "";
+            var total = 0;
+            if (!list) return;
+
+            list.forEach(function (item) {
+                html += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>
+                            <div class="qty-control" style="display:flex; align-items:center;">
+                                <button class="btn-decrease" data-product-id="${item.productId}">-</button>
+                                <input type="number" class="qty-input" data-product-id="${item.productId}" value="${item.qty}" min="1" style="width:50px; text-align:center; margin:0 4px;" />
+                                <button class="btn-increase" data-product-id="${item.productId}">+</button>
+                            </div>
+                        </td>
+                        <td>${item.unitprice.toLocaleString("vi-VN")} đ</td>
+                        <td>${item.total.toLocaleString("vi-VN")} đ</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm btnDelete" data-order-id="${$("#OrderId").val()}" data-product-id="${item.productId}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                total += item.total;
+            });
+
+            $("#orderTableBody").html(html);
+            $("#totalAmount").text(total.toLocaleString("vi-VN") + " đ");
+            $("#amountToPay").text(total.toLocaleString("vi-VN") + " đ");
+        }
+
+        // ====================== THANH TOÁN ======================
+        $("#btnPay").click(function () {
+            var orderId = $("#OrderId").val();
+            var paymentMethod = $("#paymentMethod").val();
+
+            $.post("/Employee/Order/PayOrder", { orderId: orderId, paymentMethod: paymentMethod }, function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Thanh toán thành công!",
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = "/Employee/Home/Index";
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi",
+                        text: res.message
+                    });
+                }
+            });
+        });
+
+    });
+</script>
+
+
+

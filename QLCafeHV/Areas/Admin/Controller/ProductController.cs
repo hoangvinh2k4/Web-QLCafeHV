@@ -151,7 +151,5 @@ namespace QLCafeHV.Areas.Admin.Controllers
 
             return Json(new { success = true, message = "Xóa sản phẩm thành công!" });
         }
-
-
     }
 }

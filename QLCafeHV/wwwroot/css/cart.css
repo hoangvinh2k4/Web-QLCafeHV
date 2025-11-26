@@ -1,0 +1,42 @@
+﻿h2 {
+    color: #000; /* chữ đen */
+    margin-top: 70px;
+    margin-bottom: 20px;
+}
+
+table.table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #f8f8f8; /* nền be nhạt */
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+    table.table th, table.table td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+
+    table.table th {
+        background-color: #007bff; /* màu xanh header */
+        color: #fff; /* chữ trắng */
+        font-weight: bold;
+    }
+
+    table.table tbody tr:nth-child(even) {
+        background-color: #e0e0e0; /* màu xám nhạt xen kẽ */
+    }
+
+    table.table tbody tr:hover {
+        background-color: #d0d0d0; /* hover tối hơn một chút */
+    }
+
+    table.table tfoot td {
+        font-weight: bold;
+        background-color: #d9d9d9; /* nền xám nhạt cho tổng tiền */
+    }
+
+p {
+    font-size: 16px;
+    color: #555;
+}

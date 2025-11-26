@@ -1,0 +1,117 @@
+﻿@{
+    ViewBag.Title = "Trang chủ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="hero-section slider">
+
+    <div class="slides">
+
+        <div class="slide active" style="--bg:url('/images/cafe.jpg')">
+            <div class="hero-content">
+                <div class="decorative-logo">
+                    <img src="~/images/logo.jpg" class="decorative-logo-img">
+                </div>
+                <h1>COFFEE HV</h1>
+                <p class="description">Lorem ipsum dolor sit amet...</p>
+                <a href="#" class="shop-button">SHOP HERE</a>
+            </div>
+        </div>
+
+        <div class="slide" style="--bg:url('/images/cafe2.jpg')">
+            <div class="hero-content">
+                <div class="decorative-logo">
+                    <img src="~/images/logo.jpg" class="decorative-logo-img">
+                </div>
+                <h1>COFFEE HƯƠNG VỊ ĐẶC BIỆT</h1>
+                <p class="description">Những dòng cà phê được chọn lọc...</p>
+                <a href="#" class="shop-button">XEM THÊM</a>
+            </div>
+        </div>
+
+        <div class="slide" style="--bg:url('/images/cafe3.jpg')">
+            <div class="hero-content">
+                <div class="decorative-logo">
+                    <img src="~/images/logo.jpg" class="decorative-logo-img">
+                </div>
+                <h1>COFFEE FOR LIFE</h1>
+                <p class="description">Hãy bắt đầu ngày mới bằng một ly cà phê...</p>
+                <a href="#" class="shop-button">MUA NGAY</a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="slide-control left-arrow prev">
+        <i class="fas fa-chevron-left"></i>
+    </div>
+
+    <div class="slide-control right-arrow next">
+        <i class="fas fa-chevron-right"></i>
+    </div>
+
+</section>
+
+<!-- Container 2 cột dưới slider -->
+<div class="container">
+    <aside class="sidebar">
+        <section class="filter-group">
+            <h3 class="feature-title orange-text">MENU</h3>
+            <ul>
+                <li><a href="#">CÀ PHÊ</a></li>
+                <li><a href="#">TRÀ SỮA</a></li>
+                <li><a href="#">BÁNH NGỌT</a></li>
+                <li><a href="#">ĐỒ ĂN VẶT</a></li>
+            </ul>
+        </section>
+    </aside>
+
+    <main class="product-area">
+        <div id="productContainer">
+        </div>
+    </main>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@section Scripts {
+    <script>
+        let index = 0;
+        const slides = document.querySelectorAll('.slide');
+        const total = slides.length;
+
+        function showSlide(i) {
+            slides.forEach(s => s.classList.remove('active'));
+            slides[i].classList.add('active');
+        }
+
+        document.querySelector('.next').onclick = function () {
+            index = (index + 1) % total;
+            showSlide(index);
+        };
+
+        document.querySelector('.prev').onclick = function () {
+            index = (index - 1 + total) % total;
+            showSlide(index);
+        };
+
+        setInterval(() => {
+            index = (index + 1) % total;
+            showSlide(index);
+        }, 5000);
+
+        function loadProducts() {
+            $.ajax({
+                url: "/Home/LoadProducts", // Action trả về Partial _ProductList.cshtml
+                method: "GET",
+                success: function (html) {
+                    $("#productContainer").html(html);
+                }
+            });
+        }
+
+        // Gọi khi trang vừa load
+        $(document).ready(function () {
+            loadProducts();
+        });
+    </script>
+}

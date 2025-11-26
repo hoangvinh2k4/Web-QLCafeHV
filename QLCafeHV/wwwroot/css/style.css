@@ -1,12 +1,11 @@
-/* Reset c? b?n */
-* {
+﻿* {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: #f9f9f9;
+    background: #67b2da;
 }
 
 /* Thanh top menu */
@@ -15,6 +14,8 @@ body {
     align-items: center;
     background: #0071ce;
     color: white;
+    border-radius: 12px;
+    background-color: #fedbca;
     padding: 8px 16px;
     font-weight: bold;
 }
@@ -31,7 +32,7 @@ body {
         border-radius: 4px;
     }
 
-/* Ch?n danh m?c m�n */
+/* Chọn danh mục món */
 .category-bar {
     margin: 8px 0;
     display: flex;
@@ -39,7 +40,9 @@ body {
     padding-left: 12px;
 }
 
-    .category-bar button {
+    /* Style chung cho button và a.category-btn */
+    .category-bar button,
+    .category-bar .category-btn {
         background: #e4e9ef;
         border: none;
         padding: 8px 14px;
@@ -50,15 +53,18 @@ body {
         gap: 6px;
         font-weight: normal;
         color: #444;
+        text-decoration: none; /* chỉ cần cho <a> */
     }
 
-        .category-bar button.active {
+        /* Khi active */
+        .category-bar button.active,
+        .category-bar .category-btn.active {
             background: #cde6ff;
             font-weight: 700;
             color: #0071ce;
         }
 
-/* Thanh t�m ki?m */
+/* Thanh tìm kiếm */
 .search-box {
     padding: 0 12px 12px;
 }
@@ -71,30 +77,35 @@ body {
         font-size: 14px;
     }
 
-/* Container ch�nh: left + right */
+/* Container chính: left + right */
 .container {
     display: flex;
     gap: 12px;
     padding: 0 12px 20px;
 }
 
-/* Danh s�ch m�n ?n (grid) */
+/* Danh sách món ăn (grid) */
 .food-list {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap; /* tự xuống dòng khi hết chỗ */
     gap: 12px;
+    justify-content: flex-start; /* căn từ trái sang phải */
 }
 
+/* Mỗi món ăn */
 .food-item {
     background: white;
-    padding: 6px;
     border-radius: 6px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.1);
     cursor: pointer;
     text-align: center;
     font-size: 14px;
-    position: relative;
-    box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    width: 170px; /* điều chỉnh khung vừa với ảnh */
+    height: 170px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px;
     transition: transform 0.15s ease-in-out;
 }
 
@@ -103,35 +114,38 @@ body {
         box-shadow: 0 0 12px rgba(0,0,0,0.15);
     }
 
+    /* Ảnh món ăn */
     .food-item img {
         width: 100%;
-        height: 90px;
+        height: 110px; /* giữ tỉ lệ hợp lý */
         object-fit: cover;
         border-radius: 6px;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
 
+/* Giá món ăn */
 .price-tag {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: #0071ce;
-    color: white;
-    padding: 2px 6px;
-    font-size: 12px;
-    border-radius: 3px;
-    font-weight: 600;
+    font-weight: 700;
+    color: #024ea8;
+    margin-bottom: 4px;
+}
+.food-name {
+    font-size: 13px;
+    color: #333;
+    word-break: break-word;
 }
 
-/* B?ng order b�n ph?i */
+/* Bảng order bên phải */
 .order-panel {
-    width: 370px;
+    width: 500px;
     background: white;
     border-radius: 6px;
     box-shadow: 0 0 8px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
     padding: 8px;
+    margin-left: auto;
+    color: black;
 }
 
 table {
@@ -142,21 +156,22 @@ table {
 }
 
     table th, table td {
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
         padding: 8px 6px;
         text-align: center;
         vertical-align: middle;
+        color:black
     }
 
     table th {
-        background: #f1f8ff;
-        font-weight: 600;
-        color: #222;
+        background: rgba(0,0,0,0.15);
+        font-weight: 600;      
     }
 
     table td:first-child {
         text-align: left;
         padding-left: 10px;
+        color: black;
     }
 
 .quantity-input {
@@ -194,7 +209,7 @@ table {
         color: red;
     }
 
-/* Ph?n d??i b?ng order */
+/* Phần dưới bảng order */
 .order-footer {
     padding: 8px 6px;
     font-size: 14px;
@@ -214,7 +229,7 @@ table {
             font-weight: 600;
         }
 
-/* C�c checkbox */
+/* Các checkbox */
 .checkbox-group {
     margin: 8px 0;
     display: flex;
@@ -249,7 +264,7 @@ table {
             outline: 2px solid #0071ce;
         }
 
-/* C�c n�t ch?c n?ng d??i c�ng */
+/* Các nút chức năng dưới cùng */
 .bottom-buttons {
     display: flex;
     justify-content: space-between;
@@ -296,3 +311,43 @@ table {
     .btn-orange:hover {
         background: #b56b05;
     }
+
+.table-box {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    margin: 6px;
+    text-align: center;
+    line-height: 80px;
+    font-weight: bold;
+    border-radius: 8px;
+    color: white;
+    position: relative;
+    transition: background 0.3s;
+    text-decoration: none;
+}
+
+.status-empty {
+    background: #024ea8 !important; /* blue */
+    border-color: black !important;
+}
+
+.status-occupied {
+    background: #9E9E9E !important; /* gray */
+    border-color: #616161 !important;
+}
+
+.status-booked {
+    background: #FFC107 !important; /* vàng */
+    border-color: #ff9800 !important;
+}
+
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+a.btn {
+    text-decoration: none;
+}

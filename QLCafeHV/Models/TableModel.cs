@@ -9,9 +9,8 @@ namespace QLCafeHV.Models
 
         [Required, StringLength(50)]
         public string TableName { get; set; }
-
-        [Required]
-        [RegularExpression("Đang trống|Đang phục vụ")]
-        public string Status { get; set; }
+        public string? Status { get; set; }
+        public DateTime CreatedTime { get; set; }
+        public DateTime? UpdatedTime { get; set; }
     }
 }

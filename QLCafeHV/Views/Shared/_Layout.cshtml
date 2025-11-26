@@ -1,49 +1,109 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - QLCafeHV</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/QLCafeHV.styles.css" asp-append-version="true" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Coffee HV</title>
+
+    <!-- CSS -->
+    <link href="~/css/user.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    @RenderSection("Styles", required: false)
 </head>
 <body>
+
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">QLCafeHV</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-mug-hot"></i> <span>Café HV</span>
+            </div>
+
+            <nav class="main-nav">
+                <ul>
+                    <li><a asp-area="" asp-controller="Home" asp-action="Index">HOME</a></li>
+                    <li><a asp-area="" asp-controller="Cart" asp-action="Cart">GIỎ HÀNG</a></li>
+                    <li><a href="/Favorites">YÊU THÍCH</a></li>
+                    <li><a href="/Shop">SHOP</a></li>
+                    @{
+                        var username = HttpContextAccessor.HttpContext.Session.GetString("Username");
+                    }
+
+                    @if (!string.IsNullOrEmpty(username))
+                    {                       
+                        <li><a asp-area="" asp-controller="Auth" asp-action="Logout">XIN CHÀO, @username ĐĂNG XUẤT</a></li>
+                    }
+                    else
+                    {
+                        <li><a asp-area="" asp-controller="Auth" asp-action="Login">ĐĂNG NHẬP</a></li>
+                    }
+                </ul>
+            </nav>
+        </div>
+        <!--Slider-->
+    </header>
+
+    <!-- Nội dung của từng View -->
+    @RenderBody()
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <h3>Coffee HV</h3>
+                <p>Thưởng thức cà phê ngon mỗi ngày với Coffee HV.</p>
+            </div>
+
+            <div class="footer-center">
+                <h4>Liên hệ</h4>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Hà Nội</p>
+                <p><i class="fas fa-phone"></i> 0123 456 789</p>
+                <p><i class="fas fa-envelope"></i> info@coffeehv.com</p>
+            </div>
+
+            <div class="footer-right">
+                <h4>Theo dõi chúng tôi</h4>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+        </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - QLCafeHV - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Coffee HV. All rights reserved.</p>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @RenderSection("Scripts", required: false)
+
+    <script src="~/js/slider.js"></script>
+    <!-- Sidebar JS -->
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const menuIcon = document.querySelector('.menu-icon');
+        const closeSidebar = document.getElementById('closeSidebar');
+
+        menuIcon.addEventListener('click', () => {
+            sidebar.classList.add('open');
+        });
+
+        closeSidebar.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!sidebar.contains(e.target) &&
+                !menuIcon.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+
 </body>
 </html>

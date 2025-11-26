@@ -1,0 +1,63 @@
+﻿@model QLCafeHV.Models.TableModel
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Thêm bàn";
+}
+
+<h2>Thêm bàn</h2>
+
+<form id="createForm" enctype="multipart/form-data">
+    <div class="form-group">
+        <label>Tên bàn</label>
+        <input asp-for="TableName" class="form-control" />
+    </div>
+    <button type="button" id="btnAdd" class="btn btn-primary mt-3">Thêm bàn</button>
+</form>
+
+@section Scripts {
+    <script>
+        // AJAX thêm sản phẩm
+        $("#btnAdd").click(function () {
+            let form = $("#createForm")[0];
+            let formData = new FormData(form);
+
+            $.ajax({
+                url: '@Url.Action("Create", "Table", new { area = "Admin" })',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công!',
+                            text: res.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        setTimeout(() => {
+                            window.location.href = '@Url.Action("Index", "Table", new { area = "Admin" })';
+                        }, 1500);
+
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi!',
+                            text: res.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi server',
+                        text: 'Không gửi được dữ liệu!'
+                    });
+                }
+            });
+        });
+    </script>
+}

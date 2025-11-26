@@ -1,0 +1,68 @@
+﻿@model IEnumerable<ProductModel>
+
+<div class="product-area">
+    <h3 class="feature-title orange-text">FEATURES ITEMS</h3>
+
+    <div class="product-grid">
+        @foreach (var p in Model)
+        {
+            <div class="product-card">
+                <div class="product-image-placeholder">
+                    <img src="@p.ImageUrl" alt="@p.ProductName" />
+                </div>
+                <p class="price">@String.Format("{0:N0} VNĐ", p.Price)</p>
+                <p class="name">Tên sản phẩm: @p.ProductName</p>
+                <p class="brand">Danh mục: @p.Category</p>
+
+                <button class="add-to-cart-btn"
+                        data-product-id="@p.ProductID">
+                    <i class="fa fa-shopping-cart"></i> Add to cart
+                </button>
+
+                <button class="add-to-wishlist-btn">
+                    <i class="fa fa-heart"></i> Add to wishlist
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    $(document).on("click", ".add-to-cart-btn", function (e) {
+        e.preventDefault();
+
+        console.log("Clicked AddToCart"); // <<=== kiểm tra click có chạy không
+
+        var productId = $(this).data("product-id");
+        console.log("ProductID = " + productId); // <<=== kiểm tra có lấy ID không
+
+        $.ajax({
+            url: '@Url.Action("AddToCart", "Cart")',
+            type: 'POST',
+            data: { productId: productId, quantity: 1 },
+            success: function (response) {
+                console.log("Response:", response); // <<=== kiểm tra server trả về gì
+
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công!',
+                        text: response.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: response.message
+                    });
+                }
+            },
+            error: function(xhr) {
+                console.log("AJAX ERROR", xhr.responseText); // <<=== nếu lỗi 404 hoặc 500
+            }
+        });
+    });
+</script>
+

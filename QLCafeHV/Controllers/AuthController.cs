@@ -16,7 +16,7 @@ namespace QLCafeHV.Controllers
         // ========== ĐĂNG NHẬP ==========
         [HttpGet]
         public IActionResult Login() => View();
-
+       
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
@@ -29,19 +29,22 @@ namespace QLCafeHV.Controllers
                 return View();
             }
 
-            // Lưu session
+            // Lưu thông tin chung
             HttpContext.Session.SetString("Username", acc.Username);
             HttpContext.Session.SetString("Role", acc.Role);
-            HttpContext.Session.SetString("User", acc.Role);
 
-            // Chuyển hướng theo quyền
+            // Lưu ID của người dùng từ bảng Accounts
+            HttpContext.Session.SetInt32("EmployeeID", acc.EmployeeID);
+
+            // Redirect theo role
             if (acc.Role == "Admin")
                 return RedirectToAction("Index", "Home", new { area = "Admin" });
             else if (acc.Role == "Nhân viên")
                 return RedirectToAction("Index", "Home", new { area = "Employee" });
             else
-                return RedirectToAction("Index", "Home", new { area = "User" });
+                return RedirectToAction("Index", "Home");
         }
+
 
         // ========== ĐĂNG KÝ ==========
         [HttpGet]

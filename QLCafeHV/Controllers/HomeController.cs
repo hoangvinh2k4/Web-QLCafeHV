@@ -2,21 +2,24 @@
 using Microsoft.EntityFrameworkCore;
 using QLCafeHV.Models.DbConnect;
 
-
-namespace QLCafeHV.Employee.Controllers
+namespace QLCafeHV.Home.Controllers
 {
-    [Area("Employee")]
     public class HomeController : Controller
     {
         private readonly CoffeeContext _context;
+
         public HomeController(CoffeeContext context)
         {
             _context = context;
         }
         public IActionResult Index()
         {
-            var tables = _context.Tables.OrderBy(t => t.TableName).ToList();
-            return View(tables);
+            return View();
+        }
+        public IActionResult LoadProducts()
+        {
+            var products = _context.Products.ToList();
+            return PartialView("_ProductList", products);
         }
     }
 }

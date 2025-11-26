@@ -1,0 +1,239 @@
+﻿/* Toàn bộ body trắng, bao quanh màn hình xanh lam như hình */
+
+body {
+    margin: 0;
+    background-color: #4a90e2; /* nền xanh đậm */
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+}
+/* Giữa màn hình, giả lập tablet trắng */
+
+.tablet {
+    max-width: 900px;
+    height: 600px;
+    background: white;
+    margin: 40px auto;
+    border-radius: 16px;
+    padding: 20px 40px;
+    box-sizing: border-box;
+    box-shadow: 0 0 50px rgba(0,0,0,0.3);
+    color: #222;
+    display: flex;
+    flex-direction: column;
+}
+/* Header tiêu đề phía trên */
+
+.header-title {
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 14px;
+    text-align: center;
+    color: #333;
+}
+/* Thanh menu top đơn giản mô phỏng */
+
+.top-menu {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: #555;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+    justify-content: center;
+}
+
+    .top-menu > div {
+        background: #eee;
+        padding: 6px 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        user-select: none;
+        color: #024ea8;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+
+        .top-menu > div.active, .top-menu > div:hover {
+            background: #024ea8;
+            color: white;
+        }
+/* Hàng bàn dạng flex */
+
+.table-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+/* Bàn hình chữ nhật bo góc + ghế nhỏ */
+
+.table-box {
+    position: relative;
+    width: 90px;
+    height: 60px;
+    background-color: #ffffff; /* màu trắng */
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    font-weight: 700;
+    font-size: 20px;
+    user-select: none;
+}
+
+    .table-box:hover {
+        box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+        transform: translateY(-6px);
+    }
+/* 4 ghế xung quanh bàn: hình vuông bo góc nhỏ */
+
+.chair {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background-color: white; /* màu xanh đậm */
+    border-radius: 4px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.3);
+}
+
+    .chair.top {
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .chair.bottom {
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .chair.left {
+        left: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .chair.right {
+        right: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+/* Tái định nghĩa màu ghế ngồi */
+
+.chair { /* ... các thuộc tính khác giữ nguyên ... */
+    background-color: #024ea8; /* Đổi màu ghế thành màu xanh đậm */
+}
+/* Kích thước bàn lớn hơn và phù hợp hơn với 4 ghế */
+
+.table-box {
+    width: 100px;
+    height: 70px;
+    font-size: 22px;
+}
+    /* Bàn Trống (Màu nền trắng với chữ màu xanh nhạt) */
+
+    .table-box.status-empty {
+        background-color: #ffffff;
+        color: #4a90e2;
+        border: 1px solid #cceeff;
+    }
+    /* Bàn Đang Phục vụ (Màu nền xanh đậm với chữ màu trắng) */
+
+    .table-box.status-occupied {
+        background-color: #024ea8;
+        color: white;
+        border: none; /* Đổi màu ghế khi bàn đang phục vụ để tạo độ tương phản */
+        box-shadow: 0 4px 10px rgba(2, 78, 168, 0.5);
+    }
+
+        .table-box.status-occupied .chair {
+            background-color: #ffffff; /* Ghế chuyển sang màu trắng */
+        }
+/* Vùng sơ đồ bàn */
+
+.floor-plan {
+    background-color: #fedbca; /* nền cam nhạt */
+    flex: 1;
+    border-radius: 12px;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.category-bar .category-btn {
+    background: #e4e9ef;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: normal;
+    color: #444;
+    text-decoration: none;
+}
+
+    .category-bar .category-btn.active {
+        background: #cde6ff;
+        font-weight: 700;
+        color: #0071ce;
+    }
+.table-link {
+    text-decoration: none; /* loại bỏ gạch chân */
+    color: inherit; /* giữ màu chữ theo trạng thái */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* Không áp dụng style menu cho legend-container */
+.top-menu .legend-container {
+    background: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    cursor: default !important;
+    display: flex !important;
+    align-items: center;
+    gap: 20px;
+    color: #555 !important;
+    justify-content: center;
+}
+
+    /* Không áp dụng style cho từng item bên trong */
+    .top-menu .legend-container .legend-item {
+        background: none !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        cursor: default !important;
+    }
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.color-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+}
+
+    .color-box.empty {
+        background: #024ea8;
+    }
+
+    .color-box.serving {
+        background: #9E9E9E;
+    }
+
+    .color-box.reserved {
+        background: #FFC107;
+    }
+

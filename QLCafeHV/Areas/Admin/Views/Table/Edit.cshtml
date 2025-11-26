@@ -1,0 +1,68 @@
+﻿@model QLCafeHV.Models.TableModel
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+}
+
+<h2>Chỉnh sửa bàn</h2>
+
+<form id="editForm" enctype="multipart/form-data">
+    <input type="hidden" asp-for="TableID" />
+
+    <div class="form-group">
+        <label>Tên bàn</label>
+        <input asp-for="TableName" class="form-control" />
+    </div>
+    <button type="button" id="btnSave" class="btn btn-primary mt-3">Cập nhật bàn</button>
+</form>
+
+@section Scripts {
+    <script>      
+        $("#btnSave").click(function () {
+
+            let form = $("#editForm")[0];
+            let formData = new FormData(form);
+
+            $.ajax({
+                url: "@Url.Action("Edit", "Table", new { area = "Admin" })",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+
+                    if (res.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Thành công!",
+                            text: res.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        setTimeout(() => {
+                            window.location.href = '@Url.Action("Index", "Table", new { area = "Admin" })';
+                        }, 1500);
+
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi!",
+                            text: res.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi server",
+                        text: "Không gửi được dữ liệu!"
+                    });
+                }
+            });
+        });
+
+    </script>
+}
+

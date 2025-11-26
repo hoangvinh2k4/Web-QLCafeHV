@@ -1,0 +1,155 @@
+﻿@model OrderModel
+<link href="~/css/cart.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
+<section class="hero-section slider">
+
+    <div class="slides">
+
+        <div class="slide active" style="--bg:url('/images/cafe.jpg')">
+            <div class="hero-content">
+                <div class="decorative-logo">
+                    <img src="~/images/logo.jpg" class="decorative-logo-img">
+                </div>
+                <h1>COFFEE HV</h1>
+                <p class="description">Lorem ipsum dolor sit amet...</p>
+                <a href="#" class="shop-button">SHOP HERE</a>
+            </div>
+        </div>
+
+        <div class="slide" style="--bg:url('/images/cafe2.jpg')">
+            <div class="hero-content">
+                <div class="decorative-logo">
+                    <img src="~/images/logo.jpg" class="decorative-logo-img">
+                </div>
+                <h1>COFFEE HƯƠNG VỊ ĐẶC BIỆT</h1>
+                <p class="description">Những dòng cà phê được chọn lọc...</p>
+                <a href="#" class="shop-button">XEM THÊM</a>
+            </div>
+        </div>
+
+        <div class="slide" style="--bg:url('/images/cafe3.jpg')">
+            <div class="hero-content">
+                <div class="decorative-logo">
+                    <img src="~/images/logo.jpg" class="decorative-logo-img">
+                </div>
+                <h1>COFFEE FOR LIFE</h1>
+                <p class="description">Hãy bắt đầu ngày mới bằng một ly cà phê...</p>
+                <a href="#" class="shop-button">MUA NGAY</a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="slide-control left-arrow prev">
+        <i class="fas fa-chevron-left"></i>
+    </div>
+
+    <div class="slide-control right-arrow next">
+        <i class="fas fa-chevron-right"></i>
+    </div>
+
+</section>
+
+<h2>Giỏ hàng</h2>
+
+@if (Model == null || Model.OrderDetails == null || !Model.OrderDetails.Any())
+{
+    <p>Giỏ hàng trống.</p>
+}
+else
+{
+    <table class="table table-bordered" id="cartTable">
+        <thead>
+            <tr>
+                <th>Sản phẩm</th>
+                <th>Đơn giá</th>
+                <th>Số lượng</th>
+                <th>Thành tiền</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderDetails)
+            {
+                <tr id="row-@item.OrderDetailID">
+                    <td>@item.Product?.ProductName</td>
+                    <td>@item.UnitPrice.ToString("N0")</td>
+                    <td>@item.Quantity</td>
+                    <td class="item-total">@item.TotalPrice.ToString("N0")</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger btn-remove-cart" data-order-detail-id="@item.OrderDetailID">
+                            Xóa
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end"><strong>Tổng tiền:</strong></td>
+                <td id="totalAmount">@Model.TotalAmount.ToString("N0")</td>
+            </tr>
+        </tfoot>
+    </table>
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+@section Scripts {
+    <script>
+        $(document).ready(function(){
+
+            $(document).on("click", ".btn-remove-cart", function(e){
+                e.preventDefault();
+
+                var orderDetailId = $(this).data("order-detail-id");
+                var row = $("#row-" + orderDetailId);
+
+                $.ajax({
+                    url: '@Url.Action("RemoveItem", "Cart")',
+                    type: 'POST',
+                    data: { orderDetailId: orderDetailId },
+                    success: function(response){
+                        if(response.success){
+                            // Xóa row khỏi table
+                            row.remove();
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đã xóa!',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+
+                            // Nếu không còn sản phẩm nào, hiển thị "Giỏ hàng trống"
+                            if($("#cartTable tbody tr").length === 0){
+                                $("#cartTable").replaceWith("<p>Giỏ hàng trống.</p>");
+                            } else {
+                                // Cập nhật tổng tiền
+                                var total = 0;
+                                $("#cartTable tbody tr").each(function(){
+                                    var priceText = $(this).find(".item-total").text();
+                                    var price = parseInt(priceText.replace(/,/g,""));
+                                    total += price;
+                                });
+                                $("#totalAmount").text(total.toLocaleString());
+                            }
+
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi',
+                                text: response.message
+                            });
+                        }
+                    },
+                    error: function(xhr){
+                        console.log("AJAX ERROR", xhr.responseText);
+                    }
+                });
+            });
+
+        });
+    </script>
+}

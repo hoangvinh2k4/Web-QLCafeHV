@@ -10,6 +10,8 @@ builder.Services.AddDbContext<CoffeeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+builder.Services.AddHttpContextAccessor();
+
 // Kích hoạt session
 builder.Services.AddSession(options =>
 {
@@ -39,10 +41,9 @@ app.MapControllerRoute(
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
 );
 
-// Route mặc định (Auth)
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}"
-);
+    name: "default", 
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
 
 app.Run();

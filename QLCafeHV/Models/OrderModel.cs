@@ -9,7 +9,7 @@ namespace QLCafeHV.Models
         public int OrderID { get; set; }
 
         [ForeignKey("Table")]
-        public int TableID { get; set; }
+        public int? TableID { get; set; }
         public TableModel Table { get; set; }
 
         [ForeignKey("Employee")]
