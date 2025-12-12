@@ -1,10 +1,33 @@
-﻿@model List<QLCafeHV.Models.TableModel>
+﻿@model QLCafeHV.Models.ViewModels.PageViewModel<QLCafeHV.Models.TableModel>
 
 @{
     Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
     ViewData["Title"] = "Dashboard";
+    var keyword = Context.Request.Query["keyword"];
 }
 <h2>Danh sách bàn</h2>
+
+<form method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-4">
+            <input name="keyword"
+                   value="@keyword"
+                   class="form-control"
+                   placeholder="Tìm theo mã bàn, tên..." />
+        </div>
+        <div class="col-md-4 d-flex">
+            <button class="btn btn-primary me-2">Tìm kiếm</button>
+
+            @if (!string.IsNullOrEmpty(keyword))
+            {
+                <a asp-area="Admin" asp-controller="Product" asp-action="Index"
+                   class="btn btn-secondary">
+                    Quay về danh sách đầy đủ
+                </a>
+            }
+        </div>
+    </div>
+</form>
 
 <a asp-area="Admin" asp-controller="Table" asp-action="Create" class="btn btn-primary mb-3">
     + Thêm bàn
@@ -21,7 +44,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.Items)
         {
             <tr>             
                 <td>@item.TableName</td>
@@ -44,7 +67,29 @@
         }
     </tbody>
 </table>
+<nav>
+    <ul class="pagination">
 
+        <!-- Nút Previous -->
+        <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+            <a class="page-link" href="?page=@(Model.PageNumber - 1)">«</a>
+        </li>
+
+        <!-- Danh sách trang -->
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                <a class="page-link" href="?page=@i">@i</a>
+            </li>
+        }
+
+        <!-- Nút Next -->
+        <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+            <a class="page-link" href="?page=@(Model.PageNumber + 1)">»</a>
+        </li>
+
+    </ul>
+</nav>
 @section Scripts {
     <script>
         $(".btnDelete").click(function () {

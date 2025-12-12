@@ -15,7 +15,8 @@ namespace QLCafeHV.Models
         [ForeignKey("Employee")]
         public int EmployeeID { get; set; }
         public EmployeeModel Employee { get; set; }
-
+      
+        public string? OrderCode { get; set; }
         public DateTime OrderTime { get; set; } = DateTime.Now;
         public DateTime? CheckOutTime { get; set; }
 

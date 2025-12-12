@@ -22,6 +22,5 @@ namespace QLCafeHV.Models
         [RegularExpression("Admin|Nhân viên|User")]
         public string Role { get; set; }
 
-        public bool IsActive { get; set; }
     }
 }

@@ -13,11 +13,11 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h4 class="text-center mb-3"><i class="fa-solid fa-mug-hot"></i> Coffee HV</h4>
-        <a href="/admin/home/index" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <a asp-controller="Home" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-gauge"></i> Dashboard</a>
         <a asp-controller="Product" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-cube"></i> Sản phẩm</a>
         <a asp-controller="Table" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-table"></i> Bàn</a>
-        <a href="/admin/employee/index"><i class="fa-solid fa-user-tie"></i> Nhân viên</a>
-        <a href="/admin/order/index"><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</a>
+        <a asp-controller="Employee" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-user-tie"></i> Nhân viên</a>
+        <a asp-controller="Order" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-cart-shopping"></i> Lịch sử giao dịch</a>
         <hr style="border-color: #475569;">
         <a asp-controller="Auth" asp-action="Logout" asp-area="">
             <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
@@ -33,6 +33,7 @@
 
         <div class="content-body">
             @RenderBody()
+
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

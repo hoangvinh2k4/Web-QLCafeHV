@@ -21,7 +21,7 @@ namespace QLCafeHV.Controllers
         public IActionResult Login(string username, string password)
         {
             var acc = _context.Accounts
-                .FirstOrDefault(a => a.Username == username && a.PasswordHash == password && a.IsActive);
+                .FirstOrDefault(a => a.Username == username && a.PasswordHash == password );
 
             if (acc == null)
             {
@@ -66,8 +66,7 @@ namespace QLCafeHV.Controllers
             {
                 FullName = fullname,
                 Phone = phone,
-                Role = role,
-                Status = true
+                Role = role,               
             };
             _context.Employees.Add(emp);
             _context.SaveChanges();
@@ -78,8 +77,7 @@ namespace QLCafeHV.Controllers
                 EmployeeID = emp.EmployeeID,
                 Username = username,
                 PasswordHash = password,
-                Role = role,
-                IsActive = true
+                Role = role,               
             };
             _context.Accounts.Add(acc);
             _context.SaveChanges();

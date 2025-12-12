@@ -1,18 +1,22 @@
 ﻿using QLCafeHV.Models.DbConnect;
 using Microsoft.EntityFrameworkCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews()
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+    });
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
-builder.Services.AddControllersWithViews();
-
-// Kết nối Database
 builder.Services.AddDbContext<CoffeeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
 builder.Services.AddHttpContextAccessor();
 
-// Kích hoạt session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -33,17 +37,13 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
 
-// ========== Cấu hình routes ==========
-
-// Route cho Areas (Admin, Employee)
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
 );
 
 app.MapControllerRoute(
-    name: "default", 
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
+    name: "default",
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();

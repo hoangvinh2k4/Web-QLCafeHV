@@ -90,6 +90,9 @@ else
             </tr>
         </tfoot>
     </table>
+    <button id="btnCheckout" class="btn btn-primary mt-3" data-total="@Model.TotalAmount" data-orderid="@Model.OrderID">Thanh toán</button>
+
+
 }
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -151,5 +154,39 @@ else
             });
 
         });
+               const btn = document.getElementById("btnCheckout");
+        if (btn) {
+            btn.addEventListener("click", function (e) {
+                e.preventDefault(); // ngăn submit nếu có form
+
+                const totalAmount = parseInt(btn.dataset.total);
+                const orderid = parseInt(btn.dataset.orderid);
+
+                const request = {
+                    OrderID: orderid,
+                    Amount: totalAmount,
+                    SmartcardSerial: "123456789",
+                    Package: "Gói VIP",
+                    Months: 3,
+                    PayType: ""
+                };
+
+                fetch('/Pay/ThanhToanTrucTuyen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.responseCode > 0 && data.paymentUrl) {
+                        window.location.href = data.paymentUrl; // redirect
+                    } else {
+                        alert(data.description);
+                    }
+                })
+                .catch(err => console.error(err));
+            });
+        }
+
     </script>
 }

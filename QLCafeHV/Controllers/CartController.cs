@@ -31,10 +31,8 @@ namespace QLCafeHV.Controllers
                 _context.SaveChanges();
             }
 
-            return View(order); // truyền Order đã cập nhật xuống View
+            return View(order);
         }
-
-
         [HttpPost]
         public IActionResult AddToCart(int productId, int quantity = 1)
         {

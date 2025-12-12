@@ -10,7 +10,7 @@ namespace QLCafeHV.Models
 
         [ForeignKey("Orders")]
         public int OrderID { get; set; }
-        public OrderModel Orders { get; set; }
+        public OrderModel? Orders { get; set; }
         public string PaymentMethod { get; set; }
         public decimal PaidAmount { get; set; }
         public DateTime PaymentTime { get; set; }

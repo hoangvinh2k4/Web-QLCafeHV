@@ -11,14 +11,12 @@ namespace QLCafeHV.Models
         [Required, StringLength(100)]
         public string FullName { get; set; }
 
-        [StringLength(20)]
-        public string Phone { get; set; }
-
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public string? Cccd { get; set; }
         [Required]
         [RegularExpression("Admin|Nhân viên|User")]
         public string Role { get; set; }
-
-        public bool Status { get; set; }
 
         // Quan hệ với tài khoản
         public AccountModel Account { get; set; }

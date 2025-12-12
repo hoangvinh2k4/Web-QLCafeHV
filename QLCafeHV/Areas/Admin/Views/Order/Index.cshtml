@@ -1,0 +1,217 @@
+﻿@model QLCafeHV.Models.ViewModels.PageViewModel<QLCafeHV.Models.PaymentModel>
+
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Dashboard";
+    var keyword = Context.Request.Query["keyword"];
+}
+<h2>Lịch sử đơn hàng đã thanh toán</h2>
+
+<form method="get" class="mb-3">
+    <div class="row">
+        <div class="col-md-4">
+            <input name="keyword"
+                   value="@keyword"
+                   class="form-control"
+                   placeholder="Tìm theo mã giao dịch, phương thức thanh toán..." />
+        </div>
+        <div class="col-md-4 d-flex">
+            <button class="btn btn-primary me-2">Tìm kiếm</button>
+
+            @if (!string.IsNullOrEmpty(keyword))
+            {
+                <a asp-area="Admin" asp-controller="Order" asp-action="Index"
+                   class="btn btn-secondary">
+                    Quay về danh sách đầy đủ
+                </a>
+            }
+        </div>
+    </div>
+</form>
+
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Mã thanh toán</th>
+            <th>Mã đơn hàng</th>
+            <th>Tổng tiền</th>
+            <th>Phương thức thanh toán</th>
+            <th>Ngày thanh toán</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.PaymentID</td>
+                <td>@item.OrderID</td>
+                <td>@item.PaidAmount.ToString("N0") đ</td>
+                <td>@item.PaymentMethod</td>
+                <td>@item.PaymentTime.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>
+                    <button class="btn btn-sm btn-info btnViewPayment" data-id="@item.PaymentID">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    
+                    <button class="btn btn-sm btn-danger btnDelete" data-id="@item.PaymentID">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<nav>
+    <ul class="pagination">
+
+        <!-- Previous -->
+        <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+            <a class="page-link" href="?page=@(Model.PageNumber - 1)&keyword=@keyword">«</a>
+        </li>
+
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                <a class="page-link" href="?page=@i&keyword=@keyword">@i</a>
+            </li>
+        }
+
+        <!-- Next -->
+        <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+            <a class="page-link" href="?page=@(Model.PageNumber + 1)&keyword=@keyword">»</a>
+        </li>
+
+    </ul>
+</nav>
+
+<!-- Modal xem chi tiết -->
+<div class="modal fade" id="modalPaymentDetail">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết giao dịch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <h5>Thông tin thanh toán</h5>
+                <p><strong>Mã giao dịch:</strong> <span id="pmId"></span></p>
+                <p><strong>Số tiền thanh toán:</strong> <span id="pmAmount"></span></p>
+                <p><strong>Ngày thanh toán:</strong> <span id="pmTime"></span></p>
+                <p><strong>Phương thức:</strong> <span id="pmMethod"></span></p>
+
+                <hr />
+
+                <h5>Danh sách sản phẩm</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Tên</th>
+                            <th>Danh mục</th>
+                            <th>Giá</th>
+                            <th>Số lượng</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                        <!-- JS sẽ đổ dữ liệu -->
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        $(".btnDelete").click(function () {
+            var id = $(this).data("id");
+            var row = $(this).closest("tr");
+
+            Swal.fire({
+                title: 'Bạn có chắc muốn xóa?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Có',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Order", new { area = "Admin" })',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Thành công!',
+                                    text: res.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                row.remove();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Lỗi!',
+                                    text: res.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi server',
+                                text: 'Không thể xóa sản phẩm!'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+                // Xem chi tiết
+        $(document).on("click", ".btnViewPayment", function () {
+            var id = $(this).data("id");
+
+            $.ajax({
+                url: "/Admin/Order/GetPaymentDetail",
+                type: "GET",
+                data: { id: id },
+                success: function (res) {
+                    if (!res.success) return;
+
+                    // Gán thông tin Payment
+                    $("#pmId").text(res.payment.id);
+                    $("#pmAmount").text(res.payment.amount.toLocaleString() + " đ");
+                    $("#pmTime").text(res.payment.time);
+                    $("#pmMethod").text(res.payment.method);
+
+                    // Xóa dữ liệu cũ
+                    $("#productTableBody").empty();
+
+                    // Render danh sách sản phẩm
+                    res.products.forEach(p => {
+                        $("#productTableBody").append(`
+                            <tr>
+                                <td>${p.productName}</td>
+                                <td>${p.category}</td>
+                                <td>${p.price.toLocaleString()} đ</td>
+                                <td>${p.quantity}</td>
+                            </tr>
+                        `);
+                    });
+
+                    $("#modalPaymentDetail").modal("show");
+                }
+            });
+        });
+
+    </script>
+}
+

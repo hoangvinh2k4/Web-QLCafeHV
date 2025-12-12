@@ -1,4 +1,5 @@
-﻿@{
+﻿@model List<QLCafeHV.Models.ProductModel>
+@{
     Layout = "~/Areas/Employee/Views/Shared/EmployeeLayout.cshtml";
     ViewData["Title"] = "Menu sản phẩm";
 }
@@ -9,7 +10,7 @@
 <!-- Khu vực nội dung chính -->
 <div class="container">
     <div class="food-list" id="foodList">
-        @foreach (var product in Model ?? new List<QLCafeHV.Models.ProductModel>())
+        @foreach (var product in Model)
         {
             <div class="food-item" data-id="@product.ProductID">
                 <img src="@product.ImageUrl" alt="@product.ProductName" />
