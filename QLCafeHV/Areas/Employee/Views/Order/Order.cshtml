@@ -2,7 +2,10 @@
 @{
     Layout = "~/Areas/Employee/Views/Shared/EmployeeLayout.cshtml";
     ViewData["Title"] = "Menu sản phẩm";
+    @using System.Globalization
+    CultureInfo.CurrentCulture = new CultureInfo("vi-VN");
 }
+
 <!-- Thanh tìm kiếm -->
 <div class="search-box">
     <input type="text" id="searchInput" placeholder="Nhập mã/Tên món cần tìm..." />
@@ -24,11 +27,13 @@
     <!-- Bảng order món (bên phải) -->
     <div class="order-panel">
         <input type="hidden" id="OrderId" value="@ViewBag.OrderId" />
+        <h3 class="table-title">Bàn số @ViewBag.TableNumber</h3>
+      <div class="order-body">
         <table>
             <thead>
                 <tr>
                     <th>Tên món</th>
-                    <th>SL</th>
+                    <th>Số lượng</th>
                     <th>Đơn giá</th>
                     <th>Thành tiền</th>
                     <th></th>
@@ -41,7 +46,16 @@
                     foreach (var item in ViewBag.OrderItems)
                     {
                         <tr>
-                            <td>@item.name</td>
+                                <td class="order-item-name" data-product-id="@item.productId">
+                                    <div class="item-name">@item.name</div>
+
+                                    @if (!string.IsNullOrEmpty(item.note))
+                                    {
+                                        <div class="item-note">📝 @item.note</div>
+                                    }
+                                </td>
+
+
                             <td>
                                 <div class="qty-control" style="display:flex; align-items:center;">
                                     <button class="btn-decrease" data-product-id="@item.productId">-</button>
@@ -50,7 +64,7 @@
                                 </div>
                             </td>
 
-                            <td>@String.Format("{0:N0}", item.price)</td>
+                            <td>@String.Format("{0:N0}", item.unitprice)</td>
                             <td>@String.Format("{0:N0}", item.total)</td>
                             <td>
                                 <button class="btn btn-sm btn-danger btnDelete"
@@ -64,9 +78,9 @@
                 }
             </tbody>
         </table>
-
+       </div>
         <!-- Dropdown phương thức thanh toán --> 
-        <div class="mt-3 d-flex justify-content-end align-items-center"> 
+        <div class="mt-3 d-flex justify-content-end align-items-center">
             <label for="paymentMethod" style="margin-right:10px; font-weight:500;">Phương thức thanh toán:</label> 
             <select id="paymentMethod" class="form-select" style="width:200px;"> 
                 <option value="Tiền mặt">Tiền mặt</option> 
@@ -78,14 +92,9 @@
         <div style="font-weight: 700; font-size: 14px; margin-top: 8px;">
             <div style="display: flex; justify-content: space-between; margin: 4px 0;">
                 <div>Tổng thanh toán</div>
-                <div id="totalAmount">@String.Format("{0:N0}", ViewBag.TotalAmount ?? 0) đ</div>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
-                <div>Còn phải thu</div>
-                <div id="amountToPay">@String.Format("{0:N0}", ViewBag.TotalAmount ?? 0) đ</div>
+                <div id="totalAmount">@String.Format("{0:N0}", ViewBag.TotalAmount ?? 0) </div>
             </div>
         </div>
-
 
         <!-- Nút chức năng cuối cùng -->
         <div class="bottom-buttons" style="margin-top: 12px;">
@@ -200,40 +209,7 @@
                 renderOrderTable(items);
             });
         }
-
-        // ====================== RENDER ORDER TABLE ======================
-        function renderOrderTable(list) {
-            var html = "";
-            var total = 0;
-            if (!list) return;
-
-            list.forEach(function (item) {
-                html += `
-                    <tr>
-                        <td>${item.name}</td>
-                        <td>
-                            <div class="qty-control" style="display:flex; align-items:center;">
-                                <button class="btn-decrease" data-product-id="${item.productId}">-</button>
-                                <input type="number" class="qty-input" data-product-id="${item.productId}" value="${item.qty}" min="1" style="width:50px; text-align:center; margin:0 4px;" />
-                                <button class="btn-increase" data-product-id="${item.productId}">+</button>
-                            </div>
-                        </td>
-                        <td>${item.unitprice.toLocaleString("vi-VN")} đ</td>
-                        <td>${item.total.toLocaleString("vi-VN")} đ</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm btnDelete" data-order-id="${$("#OrderId").val()}" data-product-id="${item.productId}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-                total += item.total;
-            });
-
-            $("#orderTableBody").html(html);
-            $("#totalAmount").text(total.toLocaleString("vi-VN") + " đ");
-            $("#amountToPay").text(total.toLocaleString("vi-VN") + " đ");
-        }
-
+       
         // ====================== THANH TOÁN ======================
         $("#btnPay").click(function () {
             var orderId = $("#OrderId").val();
@@ -260,6 +236,64 @@
         });
 
     });
+        $(document).on("click", ".order-item-name", function () {
+        const productId = $(this).data("product-id");
+        const orderId = $("#OrderId").val();
+
+        Swal.fire({
+            title: "Ghi chú món",
+            input: "text",
+            inputPlaceholder: "Ví dụ: ít đá, không đường...",
+            showCancelButton: true,
+            confirmButtonText: "Lưu",
+            cancelButtonText: "Hủy"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post("/Employee/Order/UpdateNote", {
+                    orderId: orderId,
+                    productId: productId,
+                    note: result.value
+                }, function (items) {
+                    renderOrderTable(items);
+                });
+            }
+        });
+    });
+     function renderOrderTable(list) {
+            console.log(list);
+            var html = "";
+            var total = 0;
+            if (!list) return;
+
+            list.forEach(function (item) {
+                html += `
+                    <tr>
+                        <td class="order-item-name" data-product-id="${item.productId}">
+                             <div class="item-name">${item.name}</div>
+                             ${item.note ? `<div class="item-note">📝 ${item.note}</div>` : ``}
+                        </td>
+                        <td>
+                            <div class="qty-control" style="display:flex; align-items:center;">
+                                <button class="btn-decrease" data-product-id="${item.productId}">-</button>
+                                <input type="number" class="qty-input" data-product-id="${item.productId}" value="${item.qty}" min="1" style="width:50px; text-align:center; margin:0 4px;" />
+                                <button class="btn-increase" data-product-id="${item.productId}">+</button>
+                            </div>
+                        </td>
+                        <td>${item.unitprice.toLocaleString("vi-VN")} </td>
+                        <td>${item.total.toLocaleString("vi-VN")} </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm btnDelete" data-order-id="${$("#OrderId").val()}" data-product-id="${item.productId}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                total += item.total;
+            });
+
+            $("#orderTableBody").html(html);
+            $("#totalAmount").text(total.toLocaleString("vi-VN"));
+            $("#amountToPay").text(total.toLocaleString("vi-VN"));
+        }
 </script>
 
 

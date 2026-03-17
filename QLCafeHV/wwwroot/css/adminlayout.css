@@ -109,4 +109,37 @@ body.admin-dashboard {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
+.menu-item {
+    position: relative;
+}
 
+/* Hover  paid serve cancel */
+.menu-item {
+    position: relative;
+}
+
+/* Ẩn menu con */
+.submenu {
+    display: none;
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 6px;
+}
+
+/* Hover vào cha thì mới hiện */
+.menu-item:hover .submenu {
+    display: block;
+}
+
+.submenu li a {
+    display: block;
+    padding: 6px 10px;
+    font-size: 14px;
+    color: #e5e7eb;
+    text-decoration: none;
+}
+
+    .submenu li a:hover {
+        background-color: #334155;
+        border-radius: 6px;
+    }

@@ -13,12 +13,8 @@ namespace QLCafeHV.Models.DbConnect
         public DbSet<EmployeeModel> Employees { get; set; }
         public DbSet<AccountModel> Accounts { get; set; }
         public DbSet<PaymentModel> Payments { get; set; }
+        public DbSet<EWorkShiftModel> EWorkShifts { get; set; }
+        public DbSet<AWorkShiftModel> AWorkShifts { get; set; }
     
-    //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    //    {
-    //        optionsBuilder
-    //            .UseSqlServer("Server=LAPTOP-88BI5LGJ\\SQLEXPRESS;Database=QLCafeHV;Trusted_Connection=True;TrustServerCertificate=True;")
-    //            .EnableSensitiveDataLogging(); 
-    //    }
     }
 }

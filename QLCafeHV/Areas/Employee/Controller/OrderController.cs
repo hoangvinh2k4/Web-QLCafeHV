@@ -46,7 +46,7 @@ namespace QLCafeHV.Areas.Employee.Controllers
             }
 
             ViewBag.OrderId = order.OrderID;
-
+            ViewBag.TableNumber = table.TableName;
             // Lấy danh sách món đã thêm trong Order
             var orderItems = _context.OrderDetails
                 .Where(x => x.OrderID == order.OrderID)
@@ -56,8 +56,9 @@ namespace QLCafeHV.Areas.Employee.Controllers
                     productId = x.ProductID,
                     name = x.Product.ProductName,
                     qty = x.Quantity,
-                    price = x.Product.Price,
-                    total = x.TotalPrice
+                    unitprice = x.Product.Price,
+                    total = x.TotalPrice,
+                    note = x.Note
                 })
                 .ToList();
             // Tính tổng tiền từ orderItems
@@ -91,7 +92,7 @@ namespace QLCafeHV.Areas.Employee.Controllers
 
             // Lấy danh sách sản phẩm còn bán
             var products = _context.Products
-                .Where(p => p.Status == "Còn bán")
+                .Where(p => p.Status == 1)
                 .OrderBy(p => p.ProductName)
                 .ToList();
 
@@ -157,31 +158,42 @@ namespace QLCafeHV.Areas.Employee.Controllers
                     name = x.Product.ProductName,
                     qty = x.Quantity,
                     unitprice = x.UnitPrice,
-                    total = x.TotalPrice
+                    total = x.TotalPrice,
+                    note = x.Note
                 }).ToList();
 
             return Json(items);
         }
-        
+
         [HttpPost]
-        public IActionResult RemoveItem(int orderId,int productId)
+        public IActionResult RemoveItem(int orderId, int productId)
         {
+            // 1. Lấy chi tiết cần xóa
             var detail = _context.OrderDetails
                 .FirstOrDefault(x => x.OrderID == orderId && x.ProductID == productId);
+
             if (detail == null)
                 return BadRequest("Món không tồn tại trong Order!");
+
+            // 2. Xóa item
             _context.OrderDetails.Remove(detail);
             _context.SaveChanges();
-            // Cập nhật tổng tiền
+
+            // 3. Tính lại tổng tiền (ToList trước)
+            var totalAmount = _context.OrderDetails
+                .Where(x => x.OrderID == orderId)
+                .Select(x => x.TotalPrice)
+                .ToList()
+                .Sum();
+
             var order = _context.Orders.Find(orderId);
             if (order != null)
             {
-                order.TotalAmount = _context.OrderDetails
-                    .Where(x => x.OrderID == orderId)
-                    .Sum(x => x.TotalPrice);
+                order.TotalAmount = totalAmount;
                 _context.SaveChanges();
             }
-            // Trả dữ liệu JSON cho JS
+
+            // 4. Lấy lại danh sách item để trả về JS
             var items = _context.OrderDetails
                 .Where(x => x.OrderID == orderId)
                 .Include(x => x.Product)
@@ -190,38 +202,66 @@ namespace QLCafeHV.Areas.Employee.Controllers
                     productId = x.ProductID,
                     name = x.Product.ProductName,
                     qty = x.Quantity,
-                    unitPrice = x.Product.Price,
-                    total = x.TotalPrice
-                }).ToList();
+                    unitprice = x.Product.Price,
+                    total = x.TotalPrice,
+                    note = x.Note
+                })
+                .ToList();
             return Json(items);
         }
 
         [HttpPost]
         public IActionResult CancelOrder(int orderId)
         {
-            var order = _context.Orders.Include(o => o.OrderDetails).FirstOrDefault(o => o.OrderID == orderId);
-            if(order == null)
+            var order = _context.Orders
+                                .Include(o => o.OrderDetails)
+                                .FirstOrDefault(o => o.OrderID == orderId);
+
+            if (order == null)
             {
                 return Json(new { success = false, message = "Order không tồn tại!" });
             }
+          
+            order.Status = "Đã hủy";
+         
             var table = _context.Tables.FirstOrDefault(t => t.TableID == order.TableID);
             if (table != null)
             {
                 table.Status = "Đang trống";
             }
-            try
-            {
-                if(order.OrderDetails != null && order.OrderDetails.Any())
+
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Hủy đơn hàng thành công!" });
+        }
+
+        [HttpPost]
+        public IActionResult UpdateNote(int orderId, int productId, string note)
+        {
+            var detail = _context.OrderDetails
+                .FirstOrDefault(x => x.OrderID == orderId && x.ProductID == productId);
+
+            if (detail == null)
+                return BadRequest("Không tìm thấy món!");
+
+            detail.Note = note;
+            _context.SaveChanges();
+
+            // Trả lại danh sách món
+            var items = _context.OrderDetails
+                .Where(x => x.OrderID == orderId)
+                .Include(x => x.Product)
+                .Select(x => new
                 {
-                    _context.OrderDetails.RemoveRange(order.OrderDetails);
-                }
-                _context.Orders.Remove(order);
-                _context.SaveChanges();
-                return Json(new { success = true, message = "Hủy đơn hàng thành công !" });
-            }catch(Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+                    productId = x.ProductID,
+                    name = x.Product.ProductName,
+                    qty = x.Quantity,
+                    unitprice = x.Product.Price,
+                    total = x.TotalPrice,
+                    note = x.Note
+                }).ToList();
+
+            return Json(items);
         }
 
         [HttpPost]
@@ -252,7 +292,8 @@ namespace QLCafeHV.Areas.Employee.Controllers
                     name = x.Product.ProductName,
                     qty = x.Quantity,
                     unitprice = x.UnitPrice,
-                    total = x.TotalPrice
+                    total = x.TotalPrice,
+                    note = x.Note
                 }).ToList();
 
             return Json(items);
@@ -297,7 +338,7 @@ namespace QLCafeHV.Areas.Employee.Controllers
                 _context.SaveChanges();
 
                 return Json(new { success = true });
-            }
+            }   
             catch (Exception ex)
             {
                 return Json(new { success = false, message = ex.Message });

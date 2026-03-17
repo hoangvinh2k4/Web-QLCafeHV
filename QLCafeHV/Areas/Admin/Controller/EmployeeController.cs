@@ -1,9 +1,7 @@
-﻿using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using QLCafeHV.Models;
 using QLCafeHV.Models.DbConnect;
 using QLCafeHV.Models.ViewModels;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace QLCafeHV.Areas.Admin.Controllers
 {
@@ -21,7 +19,7 @@ namespace QLCafeHV.Areas.Admin.Controllers
 
             // Lấy query nhân viên
             var data = _context.Employees
-                .Where(e => e.Role == "Nhân viên");
+            .Where(e => e.Role == "Employee" && e.Status == 1);
 
             // Áp dụng tìm kiếm nếu có keyword
             if (!string.IsNullOrEmpty(keyword))
@@ -36,7 +34,7 @@ namespace QLCafeHV.Areas.Admin.Controllers
 
             // Lấy dữ liệu phân trang và map sang ViewModel
             var items = data
-                .OrderBy(e => e.EmployeeID) // bạn có thể đổi theo tên nếu muốn
+                .OrderBy(e => e.EmployeeID) 
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(e => new EmployeeAccountViewModel
@@ -158,21 +156,26 @@ namespace QLCafeHV.Areas.Admin.Controllers
 
         [HttpPost]
         public IActionResult Delete(int id)
-        {   
+        {
             var employee = _context.Employees.Find(id);
+
             if (employee == null)
             {
                 return Json(new { success = false, message = "Nhân viên không tồn tại!" });
             }
 
+            employee.Status = 0;
+
             var account = _context.Accounts.FirstOrDefault(a => a.EmployeeID == id);
+
             if (account != null)
             {
-                _context.Accounts.Remove(account);
+                account.Status = 0;
             }
-            _context.Employees.Remove(employee);
+
             _context.SaveChanges();
-            return Json(new { success = true, message = "Xóa nhân viên thành công!" });
+
+            return Json(new { success = true, message = "Nhân viên đã nghỉ việc!" });
         }
 
     }

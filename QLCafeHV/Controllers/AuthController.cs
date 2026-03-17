@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using QLCafeHV.Models.DbConnect;
 using QLCafeHV.Models;
-
+using Microsoft.AspNetCore.Identity;
 namespace QLCafeHV.Controllers
 {
     public class AuthController : Controller
@@ -16,83 +16,106 @@ namespace QLCafeHV.Controllers
         // ========== ĐĂNG NHẬP ==========
         [HttpGet]
         public IActionResult Login() => View();
-       
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
-            var acc = _context.Accounts
-                .FirstOrDefault(a => a.Username == username && a.PasswordHash == password );
+            var acc = _context.Accounts.FirstOrDefault(a => a.Username == username);
 
             if (acc == null)
             {
-                ViewBag.Error = "Sai tài khoản hoặc mật khẩu!";
-                return View();
+                return Json(new
+                {
+                    success = false,
+                    message = "Sai tài khoản hoặc mật khẩu!"
+                });
             }
 
-            // Lưu thông tin chung
+            var passwordHasher = new PasswordHasher<object>();
+
+            var result = passwordHasher.VerifyHashedPassword(null, acc.PasswordHash, password);
+
+            if (result == PasswordVerificationResult.Failed)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Sai tài khoản hoặc mật khẩu!"
+                });
+            }
+
             HttpContext.Session.SetString("Username", acc.Username);
             HttpContext.Session.SetString("Role", acc.Role);
-
-            // Lưu ID của người dùng từ bảng Accounts
             HttpContext.Session.SetInt32("EmployeeID", acc.EmployeeID);
 
-            // Redirect theo role
-            if (acc.Role == "Admin")
-                return RedirectToAction("Index", "Home", new { area = "Admin" });
-            else if (acc.Role == "Nhân viên")
-                return RedirectToAction("Index", "Home", new { area = "Employee" });
-            else
-                return RedirectToAction("Index", "Home");
-        }
+            string redirectUrl = "";
 
+            if (acc.Role == "Admin")
+                redirectUrl = Url.Action("Index", "Home", new { area = "Admin" });
+
+            else if (acc.Role == "Employee")
+                redirectUrl = Url.Action("Index", "Home", new { area = "Employee" });
+
+            else
+                redirectUrl = Url.Action("Index", "Home");
+
+            return Json(new
+            {
+                success = true,
+                redirectUrl = redirectUrl
+            });
+        }
 
         // ========== ĐĂNG KÝ ==========
         [HttpGet]
         public IActionResult Register() => View();
 
         [HttpPost]
-        public IActionResult Register(string fullname, string phone, string username, string password, string role)
+        public IActionResult Register(string fullname, string phone, string username, string password)
         {
-            role = "User";  // 👉 Đặt mặc định là User
+            string role = "User";
 
             if (_context.Accounts.Any(a => a.Username == username))
             {
-                ViewBag.Error = "Tên đăng nhập đã tồn tại!";
-                return View();
+                return Json(new { success = false, message = "Tên đăng nhập đã tồn tại!" });
             }
 
-            // Tạo Employee
+            if (_context.Employees.Any(e => e.Phone == phone))
+            {
+                return Json(new { success = false, message = "Số điện thoại đã tồn tại!" });
+            }
+
             var emp = new EmployeeModel
             {
                 FullName = fullname,
                 Phone = phone,
-                Role = role,               
+                Role = role,
+                Status = 1
             };
+
             _context.Employees.Add(emp);
             _context.SaveChanges();
 
-            // Tạo Account
+            var passwordHasher = new PasswordHasher<object>();
+
             var acc = new AccountModel
             {
                 EmployeeID = emp.EmployeeID,
                 Username = username,
-                PasswordHash = password,
-                Role = role,               
+                PasswordHash = passwordHasher.HashPassword(null, password),
+                Role = role,
+                Status = 1
             };
+
             _context.Accounts.Add(acc);
             _context.SaveChanges();
 
-            ViewBag.Success = "Đăng ký thành công! Mời bạn đăng nhập.";
-            return RedirectToAction("Login");
+            return Json(new { success = true, message = "Đăng ký thành công!" });
         }
         public IActionResult Logout()
         {
-            // Xóa session
             HttpContext.Session.Clear();
-
-            // Chuyển hướng về action Login trong AuthController
             return RedirectToAction("Login", "Auth");
         }
-
     }
+
 }

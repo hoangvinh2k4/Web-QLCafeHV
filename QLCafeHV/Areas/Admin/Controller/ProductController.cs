@@ -18,7 +18,7 @@ namespace QLCafeHV.Areas.Admin.Controllers
         public IActionResult Index(string keyword,int page = 1)
         {
             int pageSize = 5;
-            var query = _context.Products.AsQueryable();
+            var query = _context.Products.Where(p => p.Status == 1).AsQueryable();
             if (!string.IsNullOrEmpty(keyword))
             {
                 query = query.Where(p =>
@@ -77,8 +77,8 @@ namespace QLCafeHV.Areas.Admin.Controllers
             }
 
             product.CreatedTime = DateTime.Now;
-            if (string.IsNullOrEmpty(product.Status))
-                product.Status = "Còn bán";
+            if (product.Status != 0 && product.Status != 1)
+                product.Status = 1;
 
             try
             {
@@ -153,25 +153,17 @@ namespace QLCafeHV.Areas.Admin.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var product = await _context.Products.FindAsync(id);
+
             if (product == null)
                 return Json(new { success = false, message = "Sản phẩm không tồn tại!" });
 
-            // Xóa ảnh nếu có
-            if (!string.IsNullOrEmpty(product.ImageUrl))
-            {
-                string imagePath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    product.ImageUrl.TrimStart('/'));
+            // Chỉ ngừng bán, không xóa thật
+            product.Status = 0;
+            product.UpdatedTime = DateTime.Now;
 
-                if (System.IO.File.Exists(imagePath))
-                    System.IO.File.Delete(imagePath);
-            }
-
-            _context.Products.Remove(product);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Xóa sản phẩm thành công!" });
+            return Json(new { success = true, message = "Đã ngừng bán sản phẩm!" });
         }
     }
 }

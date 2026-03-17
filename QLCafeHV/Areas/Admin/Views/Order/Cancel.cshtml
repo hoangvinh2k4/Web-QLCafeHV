@@ -1,11 +1,12 @@
-﻿@model QLCafeHV.Models.ViewModels.PageViewModel<QLCafeHV.Models.ProductModel>
+﻿@model QLCafeHV.Models.ViewModels.PageViewModel<QLCafeHV.Models.ViewModels.OrderDetailsViewModel>
+
+
 @{
     Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
     ViewData["Title"] = "Dashboard";
     var keyword = Context.Request.Query["keyword"];
 }
-
-<h2>Danh sách sản phẩm</h2>
+<h2>Danh sách đơn hàng bị hủy</h2>
 
 <form method="get" class="mb-3">
     <div class="row">
@@ -13,14 +14,14 @@
             <input name="keyword"
                    value="@keyword"
                    class="form-control"
-                   placeholder="Tìm theo mã sản phẩm, tên..." />
+                   placeholder="Tìm theo mã đơn hàng, tên bàn..." />
         </div>
         <div class="col-md-4 d-flex">
             <button class="btn btn-primary me-2">Tìm kiếm</button>
 
             @if (!string.IsNullOrEmpty(keyword))
             {
-                <a asp-area="Admin" asp-controller="Product" asp-action="Index"
+                <a asp-area="Admin" asp-controller="Order" asp-action="Cancel"
                    class="btn btn-secondary">
                     Quay về danh sách đầy đủ
                 </a>
@@ -30,78 +31,89 @@
 </form>
 
 
-<a asp-area="Admin" asp-controller="Product" asp-action="Create" class="btn btn-primary mb-3">
-    + Thêm sản phẩm
-</a>
-
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Ảnh</th>
-            <th>Tên</th>
+            <th>Mã đơn hàng</th>
+            <th>Tên bàn</th>
+            <th>Tên nhân viên</th>
+            <th>Thời gian bắt đầu phục vụ</th>
+            <th>Tên sản phẩm</th>
             <th>Danh mục</th>
-            <th>Giá</th>
-            <th>Trạng thái</th>
-            <th>Ngày tạo</th>
-            <th>Ngày chỉnh sửa</th>
+            <th>Giá tiền</th>
+            <th>Số lượng</th>
+            <th>Tổng tiền</th>
             <th>Hành động</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model.Items)
+        @foreach (var order in Model.Items)
         {
-            <tr>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+            var productCount = order.Items.Count();
+            var isFirstRow = true;
+
+            foreach (var product in order.Items)
+            {
+                <tr>
+                    @if (isFirstRow)
                     {
-                        <img src="@item.ImageUrl" width="80" height="60" style="border-radius:5px;" />
+                        <td rowspan="@productCount">@order.OrderID</td>
+                        <td rowspan="@productCount">@order.TableName</td>
+                        <td rowspan="@productCount">@order.EmployeeName</td>
+                        <td rowspan="@productCount">
+                            @order.OrderTime.ToString("dd/MM/yyyy HH:mm")
+                        </td>
                     }
-                </td>
-                <td>@item.ProductName</td>
-                <td>@item.Category</td>
-                <td>@item.Price.ToString("N0") đ</td>
-                <td>@item.Status</td>
-                <td>@item.CreatedTime.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>@(item.UpdatedTime.HasValue? item.UpdatedTime.Value.ToString("dd/MM/yyyy HH:mm") : "-")</td>
 
-                <td>
-                    <!-- Edit -->
-                    <a asp-area="Admin" asp-controller="Product" asp-action="Edit" asp-route-id="@item.ProductID" class="btn btn-sm btn-warning">
-                        <i class="fas fa-edit"></i>
-                    </a>
+                    <td>@product.ProductName</td>
+                    <td>@product.Category</td>
+                    <td>@product.Price.ToString("N0") đ</td>
+                    <td>@product.Quantity</td>
 
-                    <!-- Delete -->
-                    <button class="btn btn-sm btn-danger btnDelete" data-id="@item.ProductID">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            </tr>
+                    @if (isFirstRow)
+                    {
+                        <td rowspan="@productCount">
+                            @order.TotalAmount.ToString("N0") đ
+                        </td>
+                        <td rowspan="@productCount">
+                            <button class="btn btn-sm btn-danger btnDelete"
+                                    data-id="@order.OrderID">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    }
+                </tr>
+
+                isFirstRow = false;
+            }
         }
     </tbody>
+
+
 </table>
 <nav>
     <ul class="pagination">
 
-        <!-- Nút Previous -->
+        <!-- Previous -->
         <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
-            <a class="page-link" href="?page=@(Model.PageNumber - 1)">«</a>
+            <a class="page-link" href="?page=@(Model.PageNumber - 1)&keyword=@keyword">«</a>
         </li>
 
-        <!-- Danh sách trang -->
         @for (int i = 1; i <= Model.TotalPages; i++)
         {
             <li class="page-item @(i == Model.PageNumber ? "active" : "")">
-                <a class="page-link" href="?page=@i">@i</a>
+                <a class="page-link" href="?page=@i&keyword=@keyword">@i</a>
             </li>
         }
 
-        <!-- Nút Next -->
+        <!-- Next -->
         <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
-            <a class="page-link" href="?page=@(Model.PageNumber + 1)">»</a>
+            <a class="page-link" href="?page=@(Model.PageNumber + 1)&keyword=@keyword">»</a>
         </li>
 
     </ul>
 </nav>
+
 @section Scripts {
     <script>
         $(".btnDelete").click(function () {
@@ -117,7 +129,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '@Url.Action("Delete", "Product", new { area = "Admin" })',
+                        url: '@Url.Action("Delete", "Order", new { area = "Admin" })',
                         type: 'POST',
                         data: { id: id },
                         success: function (res) {

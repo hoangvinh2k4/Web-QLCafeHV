@@ -17,19 +17,68 @@
                 <h2>Đăng nhập hệ thống</h2>
                 <p>Quản lý quán café chuyên nghiệp cùng Hoàng Vinh</p>
             </div>
-            <form method="post" asp-action="Login" class="auth-form">
+            <form id="loginForm" class="auth-form">
                 <div class="input-group">
-                    <label for="username">Tên đăng nhập</label>
+                    <label>Tên đăng nhập</label>
                     <input type="text" id="username" name="username" required />
                 </div>
+
                 <div class="input-group">
-                    <label for="password">Mật khẩu</label>
+                    <label>Mật khẩu</label>
                     <input type="password" id="password" name="password" required />
                 </div>
+
                 <button type="submit" class="btn-primary">Đăng nhập</button>
-                <p class="switch-form">Chưa có tài khoản? <a asp-action="Register">Đăng ký ngay</a></p>
+
+                <p class="switch-form">
+                    Chưa có tài khoản? <a asp-action="Register">Đăng ký ngay</a>
+                </p>
             </form>
         </div>
     </div>
 </body>
 </html>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function () {
+        $("#loginForm").submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '@Url.Action("Login", "Auth")',
+                type: 'POST',
+                data: {
+                    username: $("#username").val(),
+                    password: $("#password").val()
+                },
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Đăng nhập thành công 🎉',
+                            timer: 1200,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = res.redirectUrl;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: res.message
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi server',
+                        text: 'Không thể đăng nhập!'
+                    });
+                }
+            });
+        });
+    });
+</script>

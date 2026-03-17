@@ -1,0 +1,35 @@
+﻿@model QLCafeHV.Models.AWorkShiftModel
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh giờ ca";
+}
+
+<h3>Chỉnh giờ ca: <b>@Model.ShiftType</b></h3>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="ShiftConfigId" />
+    <input type="hidden" asp-for="ShiftType" />
+    <div class="mb-3">
+        <label>Giờ bắt đầu</label>
+        <input asp-for="StartTime" type="time" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Giờ kết thúc</label>
+        <input asp-for="EndTime" type="time" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Ghi chú</label>
+        <input asp-for="Note" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        💾 Lưu
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        ↩ Quay lại
+    </a>
+</form>

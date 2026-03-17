@@ -7,6 +7,10 @@
 }
 <h2>Danh sách bàn</h2>
 
+<a asp-area="Admin" asp-controller="Table" asp-action="Create" class="btn btn-primary mb-3">
+    + Thêm bàn
+</a>
+
 <form method="get" class="mb-3">
     <div class="row">
         <div class="col-md-4">
@@ -28,10 +32,6 @@
         </div>
     </div>
 </form>
-
-<a asp-area="Admin" asp-controller="Table" asp-action="Create" class="btn btn-primary mb-3">
-    + Thêm bàn
-</a>
 
 <table class="table table-bordered">
     <thead>

@@ -1,4 +1,4 @@
-﻿@model List<QLCafeHV.Models.TableModel>
+﻿@model QLCafeHV.Models.ViewModels.PopupViewModel
 
 @{
     Layout = "~/Areas/Employee/Views/Shared/EmployeeLayout.cshtml";
@@ -7,23 +7,24 @@
 
 <div class="tablet">
     <div class="header-title">Hiển thị sơ đồ bàn với trạng thái phục vụ trực quan</div>
+
     <div class="top-menu">
         <div class="legend-container">
-        <div class="legend-item">
-            <div class="color-box empty"></div>
-            <span class="status-text">Trống</span>
-        </div>
+            <div class="legend-item">
+                <div class="color-box empty"></div>
+                <span class="status-text">Trống</span>
+            </div>
 
-        <div class="legend-item">
-            <div class="color-box serving"></div>
-            <span class="status-text">Đang phục vụ</span>
-        </div>
+            <div class="legend-item">
+                <div class="color-box serving"></div>
+                <span class="status-text">Đang phục vụ</span>
+            </div>
 
-        <div class="legend-item">
-            <div class="color-box reserved"></div>
-            <span class="status-text">Đặt trước</span>
+            <div class="legend-item">
+                <div class="color-box reserved"></div>
+                <span class="status-text">Đặt trước</span>
+            </div>
         </div>
-      </div>
     </div>
 
     <div class="floor-plan">
@@ -31,31 +32,167 @@
             int count = 0;
         }
         <div class="table-row">
-        @foreach (var table in Model ?? new List<QLCafeHV.Models.TableModel>())
-        {
-            var statusClass = table.Status switch
+            @foreach (var table in Model.Tables)
             {
-                "Đang phục vụ" => "status-occupied",
-                "Đã đặt" => "status-booked",
-                _ => "status-empty"
-            };
+                var statusClass = table.Status switch
+                {
+                    "Đang phục vụ" => "status-occupied",
+                    "Đã đặt" => "status-booked",
+                    _ => "status-empty"
+                };
 
-            <a asp-controller="Order" asp-action="Order" asp-area="Employee"
-               asp-route-id="@table.TableID"
-               class="table-box @statusClass table-link">
-                @table.TableName
-                <div class="chair top"></div>
-                <div class="chair bottom"></div>
-                <div class="chair left"></div>
-                <div class="chair right"></div>
-            </a>
+                <a asp-controller="Order"
+                   asp-action="Order"
+                   asp-area="Employee"
+                   asp-route-id="@table.TableID"
+                   class="table-box @statusClass table-link">
 
-            count++;
-            if (count % 4 == 0)
-            {
-                @Html.Raw("</div><div class=\"table-row\">")
+                    @table.TableName
+                    <div class="chair top"></div>
+                    <div class="chair bottom"></div>
+                    <div class="chair left"></div>
+                    <div class="chair right"></div>
+                </a>
+
+                count++;
+                if (count % 4 == 0)
+                {
+                    @Html.Raw("</div><div class='table-row'>")
+                }
             }
-        }
         </div>
     </div>
 </div>
+
+<!-- ================= POPUP MỞ CA ================= -->
+<div class="modal fade" id="openShiftModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Mở ca làm việc</h5>
+            </div>
+
+            <div class="modal-body">
+                <select id="shiftSelect" class="form-select mb-2">
+                   @foreach (var shift in Model.ShiftList)
+                      {
+                         <option value="@shift.ShiftConfigId">
+                         @shift.ShiftType
+                         </option>
+                      }
+                </select>
+
+                <input type="number"
+                       id="openAmount"
+                       class="form-control"
+                       placeholder="Số tiền mở ca" />
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="openShift()">
+                    Mở ca
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= POPUP ĐÓNG CA ================= -->
+<div class="modal fade" id="closeShiftModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Đóng ca & kê khai tiền</h5>
+            </div>
+
+            <div class="modal-body">
+                <input type="number" id="closeAmount"
+                       class="form-control mb-2"
+                       placeholder="Số tiền thực thu" />
+
+                <textarea id="closeNote"
+                          class="form-control"
+                          placeholder="Ghi chú (nếu có)"></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-danger" onclick="closeShiftAndLogout()">
+                    Đóng ca & Đăng xuất
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@if (!Model.HasOpenShift)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            new bootstrap.Modal(
+                document.getElementById('openShiftModal'),
+                { backdrop: 'static', keyboard: false }
+            ).show();
+        });
+    </script>
+}
+
+<script>
+function openShift() {
+    fetch('/Employee/Home/OpenShift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            shiftConfigId: document.getElementById('shiftSelect').value,
+            openAmount: document.getElementById('openAmount').value
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            location.reload();
+        } else {
+            alert(res.message);
+        }
+    });
+}
+
+</script>
+<script>
+function onLogoutClick() {
+    new bootstrap.Modal(
+        document.getElementById('closeShiftModal'),
+        { backdrop: 'static', keyboard: false }
+    ).show();
+}
+
+function closeShiftAndLogout() {
+    const amount = document.getElementById('closeAmount').value;
+
+    if (!amount) {
+        alert("Vui lòng nhập số tiền thực thu");
+        return;
+    }
+
+    fetch('/Employee/Home/CloseShift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            closeAmount: amount,
+            note: document.getElementById('closeNote').value
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            window.location.href = '/Auth/Login';
+        } else {
+            alert(res.message);
+        }
+    });
+}
+</script>

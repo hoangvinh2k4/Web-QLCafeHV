@@ -15,14 +15,17 @@ namespace QLCafeHV.Models
         public string? Address { get; set; }
         public string? Cccd { get; set; }
         [Required]
-        [RegularExpression("Admin|Nhân viên|User")]
+        [RegularExpression("Admin|Employee|User")]
         public string Role { get; set; }
-
+        [Required]
+        [Range(0, 1, ErrorMessage = "Status chỉ nhận 0 hoặc 1")]
+        public int Status { get; set; }
         // Quan hệ với tài khoản
         public AccountModel Account { get; set; }
 
         // Quan hệ với Orders
         public ICollection<OrderModel> Orders { get; set; }
+        public ICollection<EWorkShiftModel> EWorkShifts { get; set; }
     }
 }
 

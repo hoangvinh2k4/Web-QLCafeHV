@@ -19,8 +19,11 @@ namespace QLCafeHV.Models
         public string PasswordHash { get; set; }
 
         [Required]
-        [RegularExpression("Admin|Nhân viên|User")]
+        [RegularExpression("Admin|Employee|User")]
         public string Role { get; set; }
+        [Required]
+        [Range(0, 1, ErrorMessage = "Status chỉ nhận 0 hoặc 1")]
+        public int Status { get; set; }
 
     }
 }

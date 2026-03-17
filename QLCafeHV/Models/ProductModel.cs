@@ -19,12 +19,11 @@ namespace QLCafeHV.Models
         public DateTime CreatedTime { get; set; }
         public DateTime? UpdatedTime { get; set; }
 
-
         [Required]
         public decimal Price { get; set; }
 
         [Required]
-        [RegularExpression("Còn bán|Ngừng bán")]
-        public string Status { get; set; }    
+        [Range(0, 1, ErrorMessage = "Status chỉ nhận 0 hoặc 1")]
+        public int Status { get; set; }
     }
 }

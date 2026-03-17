@@ -346,7 +346,7 @@ header {
 
     .product-image-placeholder img {
         width: 100%;
-        height: 100%;
+        height: 150px;
         object-fit: cover; /* GIỮ TỈ LỆ ĐẸP */
         border-radius: 8px;
     }

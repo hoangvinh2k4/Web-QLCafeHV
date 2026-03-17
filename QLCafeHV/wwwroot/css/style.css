@@ -80,16 +80,18 @@ body {
 /* Container chính: left + right */
 .container {
     display: flex;
-    gap: 12px;
-    padding: 0 12px 20px;
+    height: calc(100vh - 120px);
+    gap: 16px;
 }
 
-/* Danh sách món ăn (grid) */
 .food-list {
+    flex: 1;
     display: flex;
-    flex-wrap: wrap; /* tự xuống dòng khi hết chỗ */
+    flex-wrap: wrap;
     gap: 12px;
-    justify-content: flex-start; /* căn từ trái sang phải */
+    align-content: flex-start;
+    overflow-y: auto;
+    margin-left: 30px;
 }
 
 /* Mỗi món ăn */
@@ -138,14 +140,30 @@ body {
 /* Bảng order bên phải */
 .order-panel {
     width: 500px;
-    background: white;
+    background: aliceblue;
     border-radius: 6px;
     box-shadow: 0 0 8px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
     padding: 8px;
     margin-left: auto;
+    margin-right: 30px;
     color: black;
+}
+.order-body {
+    flex: 1; /* chiếm phần còn lại */
+    overflow-y: auto; /* CUỘN */
+    margin-top: 8px;
+    background: lavender;
+}
+
+/* Header bàn */
+.table-title {
+    background: orange;
+    padding: 8px 12px;
+    margin: 0;
+    font-weight: 600;
+    border-radius: 4px 4px 0 0;
 }
 
 table {
@@ -157,7 +175,7 @@ table {
 
     table th, table td {
         border-bottom: 1px solid rgba(0,0,0,0.1);
-        padding: 8px 6px;
+        padding: 8px 6px;   
         text-align: center;
         vertical-align: middle;
         color:black
@@ -350,4 +368,21 @@ table {
 
 a.btn {
     text-decoration: none;
+}
+
+
+
+.order-item-name {
+    cursor: pointer;
+}
+
+.item-name {
+    font-weight: 600;
+}
+
+.item-note {
+    font-size: 12px;
+    color: #d84315;
+    font-style: italic;
+    margin-top: 2px;
 }

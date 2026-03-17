@@ -2,79 +2,87 @@
 using Microsoft.EntityFrameworkCore;
 using QLCafeHV.Models.DbConnect;
 
-    namespace QLCafeHV.Admin.Controllers
+namespace QLCafeHV.Admin.Controllers
+{
+    [Area("Admin")]
+    public class HomeController : Controller
     {
-        [Area("Admin")]
-        public class HomeController : Controller   
-        {
-            private readonly CoffeeContext _context;
+        private readonly CoffeeContext _context;
 
-            public HomeController(CoffeeContext context)
-            {
-                _context = context;
-            }
-    
+        public HomeController(CoffeeContext context)
+        {
+            _context = context;
+        }
         public IActionResult Index()
-            {
+        {
+
             var role = HttpContext.Session.GetString("Role");
             if (role != "Admin")
             {
                 return RedirectToAction("Login", "Auth");
             }
-           
-            DateTime today = DateTime.Today;
 
-                // Include Order và Product để load liên quan cùng lúc
-                var orderDetailsToday = _context.OrderDetails
-                    .Include(od => od.Order)
-                    .Include(od => od.Product)
-                    .Where(od => od.Order.OrderTime.Date == today)
-                    .ToList();
+            var today = DateTime.Today;
 
-                // Tổng sản phẩm đã bán hôm nay
-                var totalItems = orderDetailsToday.Sum(od => od.Quantity);
+            // 1. Load payments hôm nay
+            var paymentsToday = _context.Payments
+                .Include(p => p.Orders)
+                    .ThenInclude(o => o.OrderDetails)
+                        .ThenInclude(od => od.Product)
+                .Where(p => p.PaymentTime.Date == today)
+                .ToList();
 
-                // Top 5 sản phẩm bán chạy hôm nay
-                var topProducts = orderDetailsToday
-                    .GroupBy(od => od.Product.ProductName)
-                    .Select(g => new
-                    {
-                        ProductName = g.Key,
-                        Quantity = g.Sum(x => x.Quantity)
-                    })
-                    .OrderByDescending(x => x.Quantity)
-                    .Take(5)
-                    .ToList();
+            // 2. Tổng sản phẩm bán hôm nay
+            var totalItems = paymentsToday
+                .SelectMany(p => p.Orders.OrderDetails)
+                .Sum(od => od.Quantity);
 
-                // Tổng đơn và doanh thu hôm nay
-                var totalOrders = _context.Orders
-                    .Count(o => o.OrderTime.Date == today);
+            // 3. Top 5 sản phẩm bán chạy hôm nay
+            var topProducts = paymentsToday
+                .SelectMany(p => p.Orders.OrderDetails)
+                .GroupBy(od => od.Product.ProductName)
+                .Select(g => new
+                {
+                    ProductName = g.Key,
+                    Quantity = g.Sum(x => x.Quantity)
+                })
+                .OrderByDescending(x => x.Quantity)
+                .Take(5)
+                .ToList();
 
-                var totalRevenue = _context.Orders
-                    .Where(o => o.OrderTime.Date == today)
-                    .Sum(o => (decimal?)o.TotalAmount) ?? 0;
+            // 4. Tổng đơn đã thanh toán hôm nay
+            var totalOrders = paymentsToday
+                .Select(p => p.OrderID)
+                .Distinct()
+                .Count();
 
-                // Doanh thu 7 ngày gần nhất
-                var last7DaysRevenue = _context.Orders
-                    .Where(o => o.OrderTime.Date >= DateTime.Today.AddDays(-6))
-                    .GroupBy(o => o.OrderTime.Date)
-                    .Select(g => new
-                    {
-                        Date = g.Key,
-                        Revenue = g.Sum(o => o.TotalAmount)
-                    })
-                    .OrderBy(g => g.Date)
-                    .ToList();
+            // 5. Tổng doanh thu hôm nay
+            var totalRevenue = paymentsToday.Sum(p => p.PaidAmount);
 
-                ViewBag.TotalOrders = totalOrders;
-                ViewBag.TotalRevenue = totalRevenue;
-                ViewBag.TotalItems = totalItems;
-                ViewBag.TopProducts = topProducts;
-                ViewBag.Last7DaysRevenue = last7DaysRevenue;
+            // 6. Doanh thu 7 ngày gần nhất
 
-                return View();
-            }
+            var last7DaysRevenue = _context.Payments
+                .Where(p => p.PaymentTime.Date >= DateTime.Today.AddDays(-6))
+                .GroupBy(p => p.PaymentTime.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Revenue = g.Sum(x => x.PaidAmount)
+                })
+                .OrderBy(x => x.Date)
+                .ToList();
+
+            // 7. Truyền dữ liệu sang View
+            ViewBag.TotalOrders = totalOrders;
+            ViewBag.TotalRevenue = totalRevenue;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.TopProducts = topProducts;
+            ViewBag.Last7DaysRevenue = last7DaysRevenue;
+
+            return View();
         }
+
     }
+}
 
 

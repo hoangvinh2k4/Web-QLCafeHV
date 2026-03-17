@@ -10,8 +10,8 @@ namespace QLCafeHV.Models.ViewModels
         public string Address { get; set; }
         public string? Cccd { get; set; }
         public string Username { get; set; }
-        public EmployeeModel Employee { get; set; } = new EmployeeModel { Role = "Nhân viên" };
-        public AccountModel Account { get; set; } = new AccountModel { Role = "Nhân viên" };
+        public EmployeeModel Employee { get; set; } = new EmployeeModel { Role = "Employee" };
+        public AccountModel Account { get; set; } = new AccountModel { Role = "Employee" };
 
         [Required(ErrorMessage = "Vui lòng nhập mật khẩu")]
         public string Password { get; set; }

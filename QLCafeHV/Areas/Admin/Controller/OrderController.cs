@@ -14,7 +14,7 @@ namespace QLCafeHV.Areas.Admin.Controllers
         {
             _context = context;
         }
-        public IActionResult Index(string keyword, int page = 1)
+        public IActionResult Paid(string keyword, int page = 1)
         {
             int pageSize = 5;
 
@@ -47,6 +47,105 @@ namespace QLCafeHV.Areas.Admin.Controllers
                 TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
             };
 
+            ViewBag.Keyword = keyword;
+            return View(model);
+        }
+        public IActionResult Serving(string keyword, int page = 1)
+        {
+            int pageSize = 5;
+
+            var orders = _context.Orders
+                .Include(o => o.Table)
+                .Include(o => o.Employee)
+                .Where(o => o.Status != null && o.Status.Contains("Đang phục vụ"))
+                .Select(o => new OrderDetailsViewModel
+                {
+                    OrderID = o.OrderID,
+                    OrderTime = o.OrderTime,
+                    TotalAmount = o.TotalAmount,
+                    EmployeeName = o.Employee.FullName,
+                    TableName = o.Table != null ? o.Table.TableName : "Online / Mang về",
+                    Items = o.OrderDetails.Select(od => new ProductOrderDetailsViewModel
+                    {
+                        ProductName = od.Product.ProductName,
+                        Category = od.Product.Category,
+                        Price = od.UnitPrice,
+                        Quantity = od.Quantity
+                    }).ToList()
+                })
+                .ToList();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                keyword = keyword.Trim();
+
+                orders = orders.Where(o =>
+                    o.OrderID.ToString().Contains(keyword)
+                    || o.TableName.Contains(keyword)).ToList();
+            }
+
+            int totalItems = orders.Count();
+
+            var data = orders
+                .OrderByDescending(o => o.OrderID)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var model = new PageViewModel<OrderDetailsViewModel>
+            {
+                Items = data,
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
+            };
+
+            ViewBag.Keyword = keyword;
+            return View(model);
+        }
+
+        public IActionResult Cancel(string keyword, int page = 1)
+        {
+            int pageSize = 5;
+            var orders = _context.Orders
+                .Include(o => o.Table)
+                .Include(o => o.Employee)
+                .Where(o => o.Status != null && o.Status.Contains("Đã hủy"))
+                .Select(o => new OrderDetailsViewModel
+                {
+                    OrderID = o.OrderID,
+                    OrderTime = o.OrderTime,
+                    TotalAmount = o.TotalAmount,
+                    EmployeeName = o.Employee.FullName,
+                    TableName = o.Table != null ? o.Table.TableName : "Online / Mang về",
+                    Items = o.OrderDetails.Select(od => new ProductOrderDetailsViewModel
+                    {
+                        ProductName = od.Product.ProductName,
+                        Category = od.Product.Category,
+                        Price = od.UnitPrice,
+                        Quantity = od.Quantity
+                    }).ToList()
+                })
+                .ToList();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                keyword = keyword.Trim();
+                orders = orders.Where(o=>o.OrderID.ToString().Contains(keyword)||
+                o.TableName.Contains(keyword)).ToList();
+            }
+            int totalItems = orders.Count();
+            var data = orders.OrderByDescending(o => o.OrderID)
+                .Skip((page - 1)*pageSize)
+                .Take(pageSize)
+                .ToList();
+            var model = new PageViewModel<OrderDetailsViewModel>
+            {
+                Items = data,
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
+            };
             ViewBag.Keyword = keyword;
             return View(model);
         }

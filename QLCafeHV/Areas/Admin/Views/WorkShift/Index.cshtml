@@ -1,0 +1,53 @@
+﻿@model IEnumerable<QLCafeHV.Models.ViewModels.ShiftAdminViewModel>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Ca làm việc";
+}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Ca</th>
+            <th>Thời gian bắt đầu </th>
+            <th>Thời gian kết thúc </th>
+            <th>Nhân viên đang mở ca</th>
+            <th>Thời điểm mở</th>
+            <th>Thời điểm đóng</th>
+            <th>Thời gian đã làm</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    @foreach (var item in Model)
+    {
+        var openShift = item.EWorkShifts.FirstOrDefault();
+
+        <tr>
+            <td>@item.ShiftType</td>
+            <td>@item.StartTime</td>
+            <td>@item.EndTime</td>
+            <td>
+                @(openShift?.Employee?.FullName ?? "Chưa có")
+            </td>
+            <td>
+                @(openShift?.OpenTime.ToString("HH:mm dd/MM") ?? "-")
+            </td>
+            <td>
+                @(openShift?.CloseTime?.ToString("HH:mm dd/MM") ?? "-")
+            </td>
+            <td>
+                @(
+                    item.WorkedDuration != null ? $"{(int)item.WorkedDuration.Value.TotalHours} giờ {item.WorkedDuration.Value.Minutes} phút" : "-"
+                 )
+            </td>
+
+            <td>
+                <a asp-action="Edit"
+                   asp-route-id="@item.ShiftId"
+                   class="btn btn-sm btn-warning">
+                    Chỉnh giờ
+                </a>
+            </td>
+        </tr>
+    }
+</table>
