@@ -64,35 +64,39 @@
     </div>
 </div>
 
+<input type="hidden" id="employeeId" value="@(Context.Session.GetInt32("EmployeeID") ?? 0)" />
+
 <!-- ================= POPUP MỞ CA ================= -->
 <div class="modal fade" id="openShiftModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title">Mở ca làm việc</h5>
+                <h5 class="modal-title">Mở ca làm việc</h5>             
             </div>
 
             <div class="modal-body">
+
                 <select id="shiftSelect" class="form-select mb-2">
-                   @foreach (var shift in Model.ShiftList)
-                      {
-                         <option value="@shift.ShiftConfigId">
-                         @shift.ShiftType
-                         </option>
-                      }
+                    @foreach (var shift in Model.ShiftList)
+                    {
+                        <option value="@shift.ShiftConfigId">@shift.ShiftType</option>
+                    }
                 </select>
 
                 <input type="number"
                        id="openAmount"
-                       class="form-control"
+                       class="form-control mb-3"
                        placeholder="Số tiền mở ca" />
+
+                <video id="video" width="100%" autoplay style="border:1px solid black;"></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+                <p id="faceResult" class="mt-2"></p>
+
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-primary" onclick="openShift()">
-                    Mở ca
-                </button>
+                <button class="btn btn-primary" onclick="openShift()">Mở ca</button>
             </div>
 
         </div>
@@ -109,26 +113,34 @@
             </div>
 
             <div class="modal-body">
-                <input type="number" id="closeAmount"
+
+                <input type="number"
+                       id="closeAmount"
                        class="form-control mb-2"
                        placeholder="Số tiền thực thu" />
 
                 <textarea id="closeNote"
-                          class="form-control"
+                          class="form-control mb-3"
                           placeholder="Ghi chú (nếu có)"></textarea>
-            </div>
 
+                <video id="closeVideo" width="100%" autoplay style="border:1px solid black;"></video>
+                <canvas id="closeCanvas" style="display:none;"></canvas>
+                <p id="closeFaceResult" class="mt-2"></p>
+
+            </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Hủy
+                </button>
+
                 <button class="btn btn-danger" onclick="closeShiftAndLogout()">
                     Đóng ca & Đăng xuất
                 </button>
             </div>
-
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @if (!Model.HasOpenShift)
 {
     <script>
@@ -140,27 +152,162 @@
         });
     </script>
 }
-
 <script>
-function openShift() {
-    fetch('/Employee/Home/OpenShift', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            shiftConfigId: document.getElementById('shiftSelect').value,
-            openAmount: document.getElementById('openAmount').value
-        })
-    })
-    .then(r => r.json())
-    .then(res => {
-        if (res.success) {
-            location.reload();
-        } else {
-            alert(res.message);
+    let currentStream;
+
+    const employeeId = parseInt(document.getElementById("employeeId").value);
+
+    function startCamera() {
+        const video = document.getElementById("video");
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                currentStream = stream;
+                video.srcObject = stream;
+                video.onloadedmetadata = () => video.play();
+            })
+            .catch(err => {
+                console.error(err);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Không thể bật camera'
+                });
+            });
+    }
+
+    const modalEl = document.getElementById('openShiftModal');
+
+    modalEl.addEventListener('shown.bs.modal', startCamera);
+
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
         }
     });
-}
 
+    async function captureFrame(video) {
+        const canvas = document.getElementById("canvas");
+        const context = canvas.getContext("2d");
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        context.drawImage(video, 0, 0);
+
+        return canvas.toDataURL("image/jpeg");
+    }
+
+    async function openShift() {
+        const video = document.getElementById("video");
+
+        const shiftConfigId = document.getElementById("shiftSelect").value;
+        const openAmount = document.getElementById("openAmount").value;
+
+        if (!openAmount || openAmount <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Thiếu dữ liệu',
+                text: 'Nhập số tiền mở ca hợp lệ'
+            });
+            return;
+        }
+        
+        try {
+           
+            const frame1 = await captureFrame(video);
+
+            await new Promise(r => setTimeout(r, 350));
+
+            const frame2 = await captureFrame(video);
+
+            await new Promise(r => setTimeout(r, 500));
+
+            const frame3 = await captureFrame(video);
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            Swal.fire({
+                title: 'Đang xác thực...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const verifyRes = await fetch("http://127.0.0.1:5000/verify-face", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    employeeId: employeeId,
+                    frames: [frame1, frame2, frame3]
+                })
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyData.success) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Xác thực thất bại',
+                    text: verifyData.message
+                });
+                return;
+            }
+
+            const formData = new URLSearchParams();
+            formData.append("shiftConfigId", shiftConfigId);
+            formData.append("openAmount", openAmount);
+            formData.append("imageBase64", frame1);
+
+            const res = await fetch("/Employee/Home/OpenShift", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Mở ca thành công',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                }, 1500);
+
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Thất bại',
+                    text: data.message
+                });
+            }
+
+        } catch (err) {
+            console.error(err);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi hệ thống',
+                text: 'Có lỗi xảy ra'
+            });
+        }
+    }
 </script>
 <script>
 function onLogoutClick() {
@@ -170,29 +317,149 @@ function onLogoutClick() {
     ).show();
 }
 
-function closeShiftAndLogout() {
-    const amount = document.getElementById('closeAmount').value;
+    let closeStream;
 
-    if (!amount) {
-        alert("Vui lòng nhập số tiền thực thu");
-        return;
-    }
+        const closeModalEl = document.getElementById('closeShiftModal');
 
-    fetch('/Employee/Home/CloseShift', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            closeAmount: amount,
-            note: document.getElementById('closeNote').value
-        })
-    })
-    .then(r => r.json())
-    .then(res => {
-        if (res.success) {
-            window.location.href = '/Auth/Login';
-        } else {
-            alert(res.message);
+        function startCloseCamera() {
+            const video = document.getElementById("closeVideo");
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    closeStream = stream;
+                    video.srcObject = stream;
+                    video.onloadedmetadata = () => video.play();
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: 'Không thể bật camera'
+                    });
+                });
         }
-    });
-}
+
+        closeModalEl.addEventListener('shown.bs.modal', startCloseCamera);
+
+        closeModalEl.addEventListener('hidden.bs.modal', () => {
+            if (closeStream) {
+                closeStream.getTracks().forEach(track => track.stop());
+                closeStream = null;
+            }
+        });
+
+        async function captureCloseFrame(video) {
+            const canvas = document.getElementById("closeCanvas");
+            const context = canvas.getContext("2d");
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            context.drawImage(video, 0, 0);
+
+            return canvas.toDataURL("image/jpeg");
+        }
+
+        async function closeShiftAndLogout() {
+
+            const video = document.getElementById("closeVideo");
+
+            const closeAmount = document.getElementById("closeAmount").value;
+            const closeNote = document.getElementById("closeNote").value;
+
+            if (!closeAmount || closeAmount <= 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu dữ liệu',
+                    text: 'Nhập số tiền đóng ca'
+                });
+                return;
+            }
+
+            try {
+                
+                // 3 frame giống mở ca
+                const frame1 = await captureCloseFrame(video);
+                await new Promise(r => setTimeout(r, 350));
+
+                const frame2 = await captureCloseFrame(video);
+                await new Promise(r => setTimeout(r, 500));
+
+                const frame3 = await captureCloseFrame(video);
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                Swal.fire({
+                    title: 'Đang xác thực...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                // Verify Flask
+                const verifyRes = await fetch("http://127.0.0.1:5000/verify-face", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        employeeId: employeeId,
+                        frames: [frame1, frame2, frame3]
+                    })
+                });
+
+                const verifyData = await verifyRes.json();
+
+                if (!verifyData.success) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Xác thực thất bại',
+                        text: verifyData.message
+                    });
+                    return;
+                }
+
+                // ASP.NET CloseShift
+                const formData = new URLSearchParams();
+                formData.append("closeAmount", closeAmount);
+                formData.append("closeNote", closeNote);
+                formData.append("imageBase64", frame1);
+
+                const res = await fetch("/Employee/Home/CloseShift", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đóng ca thành công',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = '/Auth/Login';
+                    });
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Thất bại',
+                        text: data.message
+                    });
+                }
+
+            } catch (err) {
+                console.error(err);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi hệ thống',
+                    text: 'Có lỗi xảy ra'
+                });
+            }
+        }
 </script>

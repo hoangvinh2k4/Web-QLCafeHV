@@ -1,0 +1,35 @@
+﻿@model List<SalaryModel>
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Đăng kí khuôn mặt";
+}
+
+<h2 style="margin-bottom:20px;">Bảng lương nhân viên</h2>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Nhân viên</th>
+        <th>Tháng</th>
+        <th>Tổng giờ</th>
+        <th>Lương cơ bản</th>
+        <th>Thưởng</th>
+        <th>Phạt</th>
+        <th>Tổng lương</th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        int hours = (int)item.TotalHours;
+        int minutes = (int)Math.Round((item.TotalHours - hours) * 60);
+
+        <tr>
+            <td>@item.Employee.FullName</td>
+            <td>@item.Month/@item.Year</td>
+            <td>@hours giờ @minutes phút</td>
+            <td>@item.BaseSalary.ToString("N0") VND</td>
+            <td>@item.Bonus.ToString("N0") VND</td>
+            <td>@item.Penalty.ToString("N0") VND</td>
+            <td>@item.TotalSalary.ToString("N0") VND</td>
+        </tr>
+    }
+</table>

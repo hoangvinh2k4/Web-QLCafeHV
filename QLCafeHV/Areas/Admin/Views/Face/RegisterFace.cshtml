@@ -1,0 +1,228 @@
+﻿@model List<EmployeeModel>
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Đăng kí khuôn mặt";
+}
+
+<h2 style="margin-bottom:20px;">Đăng ký khuôn mặt nhân viên</h2>
+
+<div style="margin-bottom:20px;">
+    <label><strong>Chọn nhân viên:</strong></label>
+    <select id="employeeId" style="padding:8px; min-width:220px;">
+        @foreach (var item in Model)
+        {
+            <option value="@item.EmployeeID" data-face="@item.FaceImagePath">
+                @item.FullName
+            </option>
+        }
+    </select>
+</div>
+
+<div style="
+    display:flex;
+    gap:30px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+">
+
+    <!-- Camera -->
+    <div style="
+        padding:15px;
+        border-radius:10px;
+        box-shadow:0 0 10px rgba(0,0,0,0.1);
+        background:white;
+    ">
+        <h4 style="text-align:center;">Camera hiện tại</h4>
+
+        <video id="video"
+               width="400"
+               height="300"
+               autoplay
+               style="border:1px solid #ccc; border-radius:8px;">
+        </video>
+    </div>
+
+    <!-- Saved Face -->
+    <div style="
+        padding:15px;
+        border-radius:10px;
+        box-shadow:0 0 10px rgba(0,0,0,0.1);
+        background:white;
+    ">
+        <h4 style="text-align:center;">Ảnh đã đăng ký</h4>
+
+        <canvas id="canvas" width="400" height="300" style="display:none;"></canvas>
+
+        <img id="savedFace"
+             width="400"
+             height="300"
+             style="border:1px solid #ccc; border-radius:8px;"
+             src="@Model.FirstOrDefault()?.FaceImagePath" />
+    </div>
+
+</div>
+
+<br />
+
+<button id="captureBtn" style="
+    padding:10px 20px;
+    background:#007bff;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+">
+    Đăng ký khuôn mặt
+</button>
+
+<div id="loading" style="display:none; margin-top:15px;">
+    <div style="
+        width:30px;
+        height:30px;
+        border:4px solid #ccc;
+        border-top:4px solid #007bff;
+        border-radius:50%;
+        animation: spin 1s linear infinite;
+    "></div>
+    <p>Đang xử lý...</p>
+</div>
+
+<style>
+    @@keyframes spin {
+        0%
+
+    {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const savedFace = document.getElementById("savedFace");
+
+    let currentStream;
+
+    function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                currentStream = stream;
+                video.srcObject = stream;
+            });
+    }
+
+    function loadSavedFace() {
+        const selected = document.getElementById("employeeId").options[
+            document.getElementById("employeeId").selectedIndex
+        ];
+
+        const path = selected.getAttribute("data-face");
+
+        if (path) {
+            savedFace.src = path + "?" + new Date().getTime();
+        } else {
+            savedFace.src = "";
+        }
+    }
+
+    function captureFrame() {
+        const context = canvas.getContext("2d");
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        context.drawImage(video, 0, 0);
+
+        return canvas.toDataURL("image/jpeg");
+    }
+
+    async function capture3Frames() {
+        let frames = [];
+
+        frames.push(captureFrame());
+
+        await new Promise(r => setTimeout(r, 350));
+
+        frames.push(captureFrame());
+
+        await new Promise(r => setTimeout(r, 500));
+
+        frames.push(captureFrame());
+
+        return frames;
+    }
+
+    startCamera();
+    loadSavedFace();
+
+    document.getElementById("employeeId").addEventListener("change", loadSavedFace);
+
+    document.getElementById("captureBtn").addEventListener("click", async function () {
+
+        document.getElementById("captureBtn").disabled = true;
+
+        Swal.fire({
+            title: 'Đang xử lý...',
+            text: 'Vui lòng chờ',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const frames = await capture3Frames();
+
+        fetch('/Admin/Face/RegisterFace', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                employeeId: document.getElementById("employeeId").value,
+                frames: frames
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            document.getElementById("captureBtn").disabled = false;
+
+            if (data.success) {
+                let employeeId = document.getElementById("employeeId").value;
+
+                savedFace.src = "/facesregister/" + employeeId + ".jpg?" + new Date().getTime();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+            else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Thất bại',
+                    text: data.message
+                });
+            }
+        })
+        .catch(() => {
+
+            document.getElementById("captureBtn").disabled = false;
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Có lỗi xảy ra'
+            });
+        });
+    });
+</script>

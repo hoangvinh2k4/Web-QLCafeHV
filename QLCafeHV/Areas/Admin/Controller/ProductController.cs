@@ -52,7 +52,14 @@ namespace QLCafeHV.Areas.Admin.Controllers
         public IActionResult Create(ProductModel product)
         {
             if (!ModelState.IsValid)
-                return Json(new { success = false, message = "Dữ liệu nhập chưa hợp lệ!" });
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return Json(new { success = false, errors });
+            }
 
             var file = Request.Form.Files.FirstOrDefault();
             if (file != null && file.Length > 0)

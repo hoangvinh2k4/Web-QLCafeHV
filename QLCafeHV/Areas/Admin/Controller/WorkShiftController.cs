@@ -18,9 +18,11 @@ namespace QLCafeHV.Areas.Admin.Controllers
         public IActionResult Index()
         {
             var configs = _context.AWorkShifts
-                .Include(x => x.EWorkShifts.OrderByDescending(ws => ws.OpenTime)
-        .Take(1))
-                    .ThenInclude(ws => ws.Employee).OrderBy(x => x.StartTime)
+                .Include(x => x.EWorkShifts
+                    .Where(ws => ws.Status == "Opened")
+                    .OrderByDescending(ws => ws.OpenTime))
+                .ThenInclude(ws => ws.Employee)
+                .OrderBy(x => x.StartTime)
                 .ToList();
 
             var model = configs.Select(c => new ShiftAdminViewModel
@@ -35,39 +37,18 @@ namespace QLCafeHV.Areas.Admin.Controllers
 
             return View(model);
         }
-        public IActionResult Edit(int id)
+        public IActionResult GetShiftImageByDate(int employeeId, DateTime date)
         {
-            var shift = _context.AWorkShifts
-                .FirstOrDefault(x => x.ShiftConfigId == id);
+            var shift = _context.EWorkShifts
+                .Where(x => x.EmployeeID == employeeId && x.OpenTime.Date == date.Date)
+                .FirstOrDefault();
 
-            if (shift == null)
-                return NotFound();
-
-            return View(shift);
+            return Json(new
+            {
+                openImage = shift?.FaceImageOpen,
+                closeImage = shift?.FaceImageClose
+            });
         }
-        [HttpPost]
-        public IActionResult Edit(AWorkShiftModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var shift = _context.AWorkShifts
-                .FirstOrDefault(x => x.ShiftConfigId == model.ShiftConfigId);
-
-            if (shift == null)
-                return NotFound();
-
-            // Chỉ cập nhật giờ & ghi chú
-            shift.StartTime = model.StartTime;
-            shift.EndTime = model.EndTime;
-            shift.Note = model.Note;
-
-            _context.SaveChanges();
-
-            TempData["Success"] = "Cập nhật giờ ca thành công";
-            return RedirectToAction("Index");
-        }
-
     }
 
 }

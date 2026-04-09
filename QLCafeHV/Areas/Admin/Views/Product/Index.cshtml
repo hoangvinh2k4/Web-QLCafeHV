@@ -60,7 +60,7 @@
                 <td>@item.ProductName</td>
                 <td>@item.Category</td>
                 <td>@item.Price.ToString("N0") đ</td>
-                <td>@item.Status</td>
+                <td>@(item.Status == 1 ? "Còn bán" : "Ngừng bán")</td>
                 <td>@item.CreatedTime.ToString("dd/MM/yyyy HH:mm")</td>
                 <td>@(item.UpdatedTime.HasValue? item.UpdatedTime.Value.ToString("dd/MM/yyyy HH:mm") : "-")</td>
 

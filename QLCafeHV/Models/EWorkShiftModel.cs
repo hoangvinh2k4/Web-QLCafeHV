@@ -15,6 +15,8 @@ namespace QLCafeHV.Models
         public DateTime OpenTime { get; set; }
         public decimal? CloseAmount { get; set; }
         public DateTime? CloseTime { get; set; }
+        public string? FaceImageOpen { get; set; }
+        public string? FaceImageClose { get; set; }
         public string? Note { get; set; }
         public string Status { get; set; } // Open / Closed
         

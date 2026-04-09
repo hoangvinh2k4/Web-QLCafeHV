@@ -13,13 +13,37 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h4 class="text-center mb-3"><i class="fa-solid fa-mug-hot"></i> Coffee HV</h4>
-        <a asp-controller="Home" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-gauge"></i> Dashboard</a>
-        <a asp-controller="Product" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-cube"></i> Sản phẩm</a>
-        <a asp-controller="Table" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-table"></i> Bàn</a>
-        <a asp-controller="Employee" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-user-tie"></i> Nhân viên</a>
-        <a asp-controller="WorkShift" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-user-tie"></i> Ca làm việc</a>
-        <a asp-controller="Employee" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-user-tie"></i> Bảng lương</a>
-        <a asp-controller="User" asp-action="Index" asp-area="Admin"><i class="fa-solid fa-user-tie"></i> Người dùng</a>
+        <a asp-controller="Home" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-gauge"></i> Dashboard
+        </a>
+
+        <a asp-controller="Product" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-cube"></i> Sản phẩm
+        </a>
+
+        <a asp-controller="Table" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-table-cells-large"></i> Bàn
+        </a>
+
+        <a asp-controller="Employee" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-user-tie"></i> Nhân viên
+        </a>
+
+        <a asp-controller="Face" asp-action="RegisterFace" asp-area="Admin">
+            <i class="fa-solid fa-camera"></i> Đăng ký khuôn mặt
+        </a>
+
+        <a asp-controller="WorkShift" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-clock"></i> Ca làm việc
+        </a>
+
+        <a asp-controller="Salary" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-money-bill-wave"></i> Bảng lương
+        </a>
+
+        <a asp-controller="User" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-users"></i> Người dùng
+        </a>
         <li class="menu-item">
             <a 
                 class="menu-link">
@@ -66,7 +90,6 @@
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @RenderSection("Scripts", required: false)
 </body>

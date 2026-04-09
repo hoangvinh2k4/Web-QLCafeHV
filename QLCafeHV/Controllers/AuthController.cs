@@ -31,7 +31,6 @@ namespace QLCafeHV.Controllers
             }
 
             var passwordHasher = new PasswordHasher<object>();
-
             var result = passwordHasher.VerifyHashedPassword(null, acc.PasswordHash, password);
 
             if (result == PasswordVerificationResult.Failed)
@@ -43,25 +42,37 @@ namespace QLCafeHV.Controllers
                 });
             }
 
-            HttpContext.Session.SetString("Username", acc.Username);
-            HttpContext.Session.SetString("Role", acc.Role);
+            HttpContext.Session.SetString("Username", acc.Username ?? "");
+            HttpContext.Session.SetString("Role", acc.Role ?? "");
             HttpContext.Session.SetInt32("EmployeeID", acc.EmployeeID);
 
-            string redirectUrl = "";
+            string redirectUrl;
 
             if (acc.Role == "Admin")
-                redirectUrl = Url.Action("Index", "Home", new { area = "Admin" });
-
+            {
+                redirectUrl = Url.Action("Index", "Home", new { area = "Admin" })!;
+            }
             else if (acc.Role == "Employee")
-                redirectUrl = Url.Action("Index", "Home", new { area = "Employee" });
-
+            {
+                redirectUrl = Url.Action("Index", "Home", new { area = "Employee" })!;
+            }
+            else if (acc.Role == "User")
+            {
+                redirectUrl = Url.Action("Index", "Home")!;
+            }
             else
-                redirectUrl = Url.Action("Index", "Home");
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Role không hợp lệ!"
+                });
+            }
 
             return Json(new
             {
                 success = true,
-                redirectUrl = redirectUrl
+                redirectUrl
             });
         }
 
@@ -115,6 +126,13 @@ namespace QLCafeHV.Controllers
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Auth");
+        }
+        [HttpPost]
+        public IActionResult CheckUsername(string username)
+        {
+            bool exists = _context.Accounts.Any(a => a.Username == username);
+
+            return Json(new { exists });
         }
     }
 

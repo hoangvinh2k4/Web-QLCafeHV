@@ -8,8 +8,6 @@
     <thead>
         <tr>
             <th>Ca</th>
-            <th>Thời gian bắt đầu </th>
-            <th>Thời gian kết thúc </th>
             <th>Nhân viên đang mở ca</th>
             <th>Thời điểm mở</th>
             <th>Thời điểm đóng</th>
@@ -24,30 +22,119 @@
 
         <tr>
             <td>@item.ShiftType</td>
-            <td>@item.StartTime</td>
-            <td>@item.EndTime</td>
             <td>
-                @(openShift?.Employee?.FullName ?? "Chưa có")
-            </td>
+                @if (item.EWorkShifts.Any())
+                {
+                    foreach (var shift in item.EWorkShifts)
+                    {
+                        <div>@shift.Employee.FullName</div>
+                    }
+                }
+                else
+                {
+                    <span>Chưa có</span>
+                }
+        </td>
             <td>
-                @(openShift?.OpenTime.ToString("HH:mm dd/MM") ?? "-")
-            </td>
+                @if (item.EWorkShifts.Any())
+                {
+                    foreach (var shift in item.EWorkShifts)
+                    {
+                        <div>@shift.OpenTime.ToString("HH:mm dd/MM")</div>
+                    }
+                }
+                else
+                {
+                    <span>-</span>
+                }
+        </td>
             <td>
-                @(openShift?.CloseTime?.ToString("HH:mm dd/MM") ?? "-")
-            </td>
+                @if (item.EWorkShifts.Any())
+                {
+                    foreach (var shift in item.EWorkShifts)
+                    {
+                        <div>@(shift.CloseTime?.ToString("HH:mm dd/MM") ?? "-")</div>
+                    }
+                }
+                else
+                {
+                    <span>-</span>
+                }
+        </td>
             <td>
                 @(
                     item.WorkedDuration != null ? $"{(int)item.WorkedDuration.Value.TotalHours} giờ {item.WorkedDuration.Value.Minutes} phút" : "-"
                  )
             </td>
-
-            <td>
-                <a asp-action="Edit"
-                   asp-route-id="@item.ShiftId"
-                   class="btn btn-sm btn-warning">
-                    Chỉnh giờ
-                </a>
+        <td>
+            @foreach (var shift in item.EWorkShifts)
+                {
+                    <div class="mb-1">
+                        <button class="btn btn-primary btn-sm btn-detail"
+                                data-bs-toggle="modal"
+                                data-bs-target="#imageModal"
+                                data-employeeid="@shift.EmployeeID">
+                            Xem chi tiết
+                        </button>
+                    </div>
+                }
             </td>
         </tr>
-    }
+        }
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Xem ảnh theo ngày</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+
+                    <input type="hidden" id="employeeId" />
+
+                    <div class="mb-3">
+                        <input type="date" id="selectedDate" class="form-control" />
+                    </div>
+
+                    <button class="btn btn-success mb-3" onclick="loadShiftImage()">Xem ảnh</button>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Ảnh mở ca</h6>
+                            <img id="openImage" src="" class="img-fluid border" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6>Ảnh đóng ca</h6>
+                            <img id="closeImage" src="" class="img-fluid border" />
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
 </table>
+<script>
+    document.querySelectorAll(".btn-detail").forEach(button => {
+        button.addEventListener("click", function () {
+            document.getElementById("employeeId").value = this.dataset.employeeid;
+        });
+    });
+
+    function loadShiftImage() {
+        let employeeId = document.getElementById("employeeId").value;
+        let date = document.getElementById("selectedDate").value;
+
+        $.get('/Admin/WorkShift/GetShiftImageByDate', {
+            employeeId: employeeId,
+            date: date
+        }, function (data) {
+            $("#openImage").attr("src", data.openImage || "/images/no-image.png");
+            $("#closeImage").attr("src", data.closeImage || "/images/no-image.png");
+        });
+    }
+</script>

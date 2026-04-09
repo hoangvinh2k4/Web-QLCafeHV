@@ -21,6 +21,7 @@
                 <div class="input-group">
                     <label>Tên đăng nhập</label>
                     <input type="text" id="username" name="username" required />
+                    <small id="loginError" style="color:red;"></small>
                 </div>
 
                 <div class="input-group">
@@ -39,46 +40,28 @@
 </body>
 </html>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    $(document).ready(function () {
-        $("#loginForm").submit(function (e) {
-            e.preventDefault();
+    $("#loginForm").submit(function (e) {
+        e.preventDefault();
 
-            $.ajax({
-                url: '@Url.Action("Login", "Auth")',
-                type: 'POST',
-                data: {
-                    username: $("#username").val(),
-                    password: $("#password").val()
-                },
-                success: function (res) {
-                    if (res.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Đăng nhập thành công 🎉',
-                            timer: 1200,
-                            showConfirmButton: false
-                        }).then(() => {
-                            window.location.href = res.redirectUrl;
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Lỗi',
-                            text: res.message
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Lỗi server',
-                        text: 'Không thể đăng nhập!'
-                    });
+        $.ajax({
+            url: '@Url.Action("Login", "Auth")',
+            type: 'POST',
+            data: {
+                username: $("#username").val(),
+                password: $("#password").val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    window.location.href = res.redirectUrl;
+                } else {
+                    $("#loginError").text(res.message);
                 }
-            });
+            },
+            error: function () {
+                $("#loginError").text("Lỗi server");
+            }
         });
     });
 </script>

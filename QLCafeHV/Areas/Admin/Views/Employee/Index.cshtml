@@ -42,7 +42,6 @@
             <th>Địa chỉ</th>
             <th>Căn cước công dân</th>
             <th>Tên đăng nhập</th>
-            <th>Mật khẩu</th>
             <th>Hành động</th>
         </tr>
     </thead>
@@ -55,7 +54,6 @@
                 <td>@item.Employee.Address</td>
                 <td>@item.Employee.Cccd</td>
                 <td>@item.Account.Username</td>
-                <td>@item.Account.PasswordHash</td>
                 <td>
                     <a asp-area="Admin" asp-controller="Employee" asp-action="Edit" asp-route-id="@item.Employee.EmployeeID" class="btn btn-sm btn-warning">
                         <i class="fas fa-edit"></i>
