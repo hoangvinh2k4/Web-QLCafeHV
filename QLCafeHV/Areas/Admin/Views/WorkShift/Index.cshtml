@@ -7,7 +7,9 @@
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Ca</th>
+            <th>Ca</th>        
+            <th>Thời gian bắt đầu </th>
+            <th>Thời gian kết thúc </th>
             <th>Nhân viên đang mở ca</th>
             <th>Thời điểm mở</th>
             <th>Thời điểm đóng</th>
@@ -22,6 +24,8 @@
 
         <tr>
             <td>@item.ShiftType</td>
+            <td>@item.StartTime</td>
+            <td>@item.EndTime</td>
             <td>
                 @if (item.EWorkShifts.Any())
                 {

@@ -1,7 +1,7 @@
 ﻿@model List<SalaryModel>
 @{
     Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
-    ViewData["Title"] = "Đăng kí khuôn mặt";
+    ViewData["Title"] = "Bảng lương";
 }
 
 <h2 style="margin-bottom:20px;">Bảng lương nhân viên</h2>
@@ -15,6 +15,7 @@
         <th>Thưởng</th>
         <th>Phạt</th>
         <th>Tổng lương</th>
+        <th>Hành động</th>
     </tr>
 
     @foreach (var item in Model)
@@ -30,6 +31,62 @@
             <td>@item.Bonus.ToString("N0") VND</td>
             <td>@item.Penalty.ToString("N0") VND</td>
             <td>@item.TotalSalary.ToString("N0") VND</td>
+            <td>
+                <button class="btn btn-info btn-sm"
+                        onclick="showSalaryDetail(@item.EmployeeID,@item.Month,@item.Year)">
+                    Xem chi tiết
+                </button>
+
+                <button class="btn btn-success btn-sm"
+                        onclick="updateSalary(@item.EmployeeID,@item.Month,@item.Year)">
+                    Cập nhật lương
+                </button>
+            </td>
         </tr>
     }
 </table>
+
+<div class="modal fade" id="salaryDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Chi tiết thưởng / phạt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="salaryDetailContent">
+                Đang tải...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showSalaryDetail(employeeId, month, year) {
+        $.get('/Admin/Salary/GetSalaryDetail', {
+            employeeId: employeeId,
+            month: month,
+            year: year
+        }, function (data) {
+            $('#salaryDetailContent').html(data);
+            $('#salaryDetailModal').modal('show');
+        });
+    }
+
+    function updateSalary(employeeId, month, year) {
+        if (!confirm('Bạn có chắc muốn cập nhật lương cho nhân viên này không?')) return;
+
+        $.post('/Admin/Salary/CalculateSalaryForEmployee', {
+            employeeId: employeeId,
+            month: month,
+            year: year
+        }, function (res) {
+            if (res.success) {
+                alert('Cập nhật lương thành công!');
+                location.reload(); // reload để bảng lương hiển thị mới
+            } else {
+                alert('Lỗi: ' + res.message);
+            }
+        });
+    }
+</script>

@@ -13,7 +13,9 @@ namespace QLCafeHV.Models.DbConnect
         public DbSet<EmployeeModel> Employees { get; set; }
         public DbSet<AccountModel> Accounts { get; set; }
         public DbSet<PaymentModel> Payments { get; set; }
+        public DbSet<SalaryAdjustmentModel> SalaryAdjustments { get; set; }
         public DbSet<SalaryModel> Salaries { get; set; }
+        public DbSet<DiscountModel> Discounts { get; set; }
         public DbSet<EWorkShiftModel> EWorkShifts { get; set; }
         public DbSet<AWorkShiftModel> AWorkShifts { get; set; }
     

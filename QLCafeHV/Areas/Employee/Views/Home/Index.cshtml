@@ -122,6 +122,7 @@
                 <textarea id="closeNote"
                           class="form-control mb-3"
                           placeholder="Ghi chú (nếu có)"></textarea>
+                <input type="hidden" id="shiftEndTime" value="@ViewBag.CurrentShiftEndTime" />
 
                 <video id="closeVideo" width="100%" autoplay style="border:1px solid black;"></video>
                 <canvas id="closeCanvas" style="display:none;"></canvas>
@@ -214,20 +215,19 @@
             });
             return;
         }
-        
+
         try {
-           
+
             const frame1 = await captureFrame(video);
 
             await new Promise(r => setTimeout(r, 350));
-
             const frame2 = await captureFrame(video);
 
             await new Promise(r => setTimeout(r, 500));
-
             const frame3 = await captureFrame(video);
 
             await new Promise(resolve => setTimeout(resolve, 1000));
+
             Swal.fire({
                 title: 'Đang xác thực...',
                 allowOutsideClick: false,
@@ -236,6 +236,7 @@
                 }
             });
 
+            // ================= VERIFY FACE =================
             const verifyRes = await fetch("http://127.0.0.1:5000/verify-face", {
                 method: "POST",
                 headers: {
@@ -258,6 +259,43 @@
                 return;
             }
 
+            // ================= CHECK SHIFT TIME =================
+            const checkForm = new URLSearchParams();
+            checkForm.append("shiftConfigId", shiftConfigId);
+
+            const checkRes = await fetch("/Employee/Home/CheckShiftTime", {
+                method: "POST",
+                body: checkForm
+            });
+
+            const checkData = await checkRes.json();
+
+            // ================= EARLY =================
+            if (checkData.warningType === "early") {
+
+                const result = await Swal.fire({
+                    icon: 'warning',
+                    title: checkData.message,
+                    text: 'Bạn có muốn tiếp tục mở ca không?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Có',
+                    cancelButtonText: 'Không'
+                });
+
+                if (!result.isConfirmed) return;
+            }
+
+            // ================= LATE =================
+            if (checkData.warningType === "late") {
+
+                await Swal.fire({
+                    icon: 'warning',
+                    title: checkData.message,
+                    confirmButtonText: 'OK'
+                });
+            }
+
+            // ================= SAVE OPEN SHIFT =================
             const formData = new URLSearchParams();
             formData.append("shiftConfigId", shiftConfigId);
             formData.append("openAmount", openAmount);
@@ -275,8 +313,7 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Mở ca thành công',
-                    text: data.message,
-                    timer: 1500,
+                    timer: 2000,
                     showConfirmButton: false
                 });
 
@@ -310,156 +347,196 @@
     }
 </script>
 <script>
-function onLogoutClick() {
-    new bootstrap.Modal(
-        document.getElementById('closeShiftModal'),
-        { backdrop: 'static', keyboard: false }
-    ).show();
-}
+    function onLogoutClick() {
+        new bootstrap.Modal(
+            document.getElementById('closeShiftModal'),
+            { backdrop: 'static', keyboard: false }
+        ).show();
+    }
 
     let closeStream;
 
-        const closeModalEl = document.getElementById('closeShiftModal');
+    const closeModalEl = document.getElementById('closeShiftModal');
 
-        function startCloseCamera() {
-            const video = document.getElementById("closeVideo");
+    function startCloseCamera() {
+        const video = document.getElementById("closeVideo");
 
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    closeStream = stream;
-                    video.srcObject = stream;
-                    video.onloadedmetadata = () => video.play();
-                })
-                .catch(err => {
-                    console.error(err);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Lỗi',
-                        text: 'Không thể bật camera'
-                    });
-                });
-        }
-
-        closeModalEl.addEventListener('shown.bs.modal', startCloseCamera);
-
-        closeModalEl.addEventListener('hidden.bs.modal', () => {
-            if (closeStream) {
-                closeStream.getTracks().forEach(track => track.stop());
-                closeStream = null;
-            }
-        });
-
-        async function captureCloseFrame(video) {
-            const canvas = document.getElementById("closeCanvas");
-            const context = canvas.getContext("2d");
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            context.drawImage(video, 0, 0);
-
-            return canvas.toDataURL("image/jpeg");
-        }
-
-        async function closeShiftAndLogout() {
-
-            const video = document.getElementById("closeVideo");
-
-            const closeAmount = document.getElementById("closeAmount").value;
-            const closeNote = document.getElementById("closeNote").value;
-
-            if (!closeAmount || closeAmount <= 0) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                closeStream = stream;
+                video.srcObject = stream;
+                video.onloadedmetadata = () => video.play();
+            })
+            .catch(err => {
+                console.error(err);
                 Swal.fire({
-                    icon: 'warning',
-                    title: 'Thiếu dữ liệu',
-                    text: 'Nhập số tiền đóng ca'
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Không thể bật camera'
+                });
+            });
+    }
+
+    closeModalEl.addEventListener('shown.bs.modal', startCloseCamera);
+
+    closeModalEl.addEventListener('hidden.bs.modal', () => {
+        if (closeStream) {
+            closeStream.getTracks().forEach(track => track.stop());
+            closeStream = null;
+        }
+    });
+
+    async function captureCloseFrame(video) {
+        const canvas = document.getElementById("closeCanvas");
+        const context = canvas.getContext("2d");
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        context.drawImage(video, 0, 0);
+
+        return canvas.toDataURL("image/jpeg");
+    }
+
+    async function closeShiftAndLogout() {
+        const video = document.getElementById("closeVideo");
+
+        const closeAmount = document.getElementById("closeAmount").value;
+        const closeNote = document.getElementById("closeNote").value;
+
+        if (!closeAmount || closeAmount <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Thiếu dữ liệu',
+                text: 'Nhập số tiền đóng ca'
+            });
+            return;
+        }
+
+        try {
+
+            // ================= CHECK CLOSE SHIFT =================
+            const checkRes = await fetch("/Employee/Home/CheckCloseShiftTime", {
+                method: "POST"
+            });
+
+            const checkData = await checkRes.json();
+
+            if (!checkData.success) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: checkData.message
                 });
                 return;
             }
 
-            try {
-                
-                // 3 frame giống mở ca
-                const frame1 = await captureCloseFrame(video);
-                await new Promise(r => setTimeout(r, 350));
-
-                const frame2 = await captureCloseFrame(video);
-                await new Promise(r => setTimeout(r, 500));
-
-                const frame3 = await captureCloseFrame(video);
-
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                Swal.fire({
-                    title: 'Đang xác thực...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                // Verify Flask
-                const verifyRes = await fetch("http://127.0.0.1:5000/verify-face", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        employeeId: employeeId,
-                        frames: [frame1, frame2, frame3]
-                    })
+            // ================= NẾU ĐÓNG CA SỚM =================
+            if (checkData.warningType === "early") {
+                const confirmResult = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Đóng ca sớm',
+                    text: checkData.message + ', vẫn tiếp tục?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Có',
+                    cancelButtonText: 'Không'
                 });
 
-                const verifyData = await verifyRes.json();
+                if (!confirmResult.isConfirmed) return;
+            }
 
-                if (!verifyData.success) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Xác thực thất bại',
-                        text: verifyData.message
-                    });
-                    return;
-                }
-
-                // ASP.NET CloseShift
-                const formData = new URLSearchParams();
-                formData.append("closeAmount", closeAmount);
-                formData.append("closeNote", closeNote);
-                formData.append("imageBase64", frame1);
-
-                const res = await fetch("/Employee/Home/CloseShift", {
-                    method: "POST",
-                    body: formData
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Đóng ca thành công',
-                        text: data.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.href = '/Auth/Login';
-                    });
-
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Thất bại',
-                        text: data.message
-                    });
-                }
-
-            } catch (err) {
-                console.error(err);
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Lỗi hệ thống',
-                    text: 'Có lỗi xảy ra'
+            // ================= NẾU ĐÓNG CA MUỘN =================
+            if (checkData.warningType === "late") {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Đóng ca muộn',
+                    text: checkData.message
                 });
             }
+
+            // ================= CHỤP 3 FRAME =================
+            const frame1 = await captureCloseFrame(video);
+            await new Promise(r => setTimeout(r, 350));
+
+            const frame2 = await captureCloseFrame(video);
+            await new Promise(r => setTimeout(r, 500));
+
+            const frame3 = await captureCloseFrame(video);
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            Swal.fire({
+                title: 'Đang xác thực...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // ================= VERIFY FACE =================
+            const verifyRes = await fetch("http://127.0.0.1:5000/verify-face", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    employeeId: employeeId,
+                    frames: [frame1, frame2, frame3]
+                })
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyData.success) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Xác thực thất bại',
+                    text: verifyData.message
+                });
+                return;
+            }
+
+            // ================= CLOSE SHIFT =================
+            const formData = new URLSearchParams();
+            formData.append("closeAmount", closeAmount);
+            formData.append("closeNote", closeNote);
+            formData.append("imageBase64", frame1);
+
+            const res = await fetch("/Employee/Home/CloseShift", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                Swal.fire({
+                    icon: data.message.includes("muộn") || data.message.includes("sớm")
+                        ? 'warning'
+                        : 'success',
+                    title: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = '/Auth/Login';
+                });
+            }
+            else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Thất bại',
+                    text: data.message
+                });
+            }
+
+        } catch (err) {
+            console.error(err);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi hệ thống',
+                text: 'Có lỗi xảy ra'
+            });
         }
+    }
 </script>

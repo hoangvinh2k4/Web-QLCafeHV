@@ -27,9 +27,8 @@ namespace QLCafeHV.Areas.Employee.Controllers
                 return BadRequest("EmployeeID chưa được đăng nhập!");
 
             // Kiểm tra order Pending của bàn
-            var order = _context.Orders
-                .FirstOrDefault(x => x.TableID == id && x.Status == "Đang phục vụ");
-
+            var order = _context.Orders.Where(x => x.TableID == id && x.Status == "Đang phục vụ")
+                .OrderByDescending(x => x.OrderID).FirstOrDefault();
             // Nếu chưa có thì tạo mới
             if (order == null)
             {
@@ -47,6 +46,7 @@ namespace QLCafeHV.Areas.Employee.Controllers
 
             ViewBag.OrderId = order.OrderID;
             ViewBag.TableNumber = table.TableName;
+            ViewBag.TableId = id;
             // Lấy danh sách món đã thêm trong Order
             var orderItems = _context.OrderDetails
                 .Where(x => x.OrderID == order.OrderID)
@@ -298,9 +298,42 @@ namespace QLCafeHV.Areas.Employee.Controllers
 
             return Json(items);
         }
-        
+
         [HttpPost]
-        public IActionResult PayOrder(int orderId, string paymentMethod)
+        public IActionResult ApplyDiscount(int orderId, string code)
+        {
+            var order = _context.Orders.Find(orderId);
+
+            if (order == null)
+                return Json(new { success = false, message = "Không tìm thấy đơn" });
+
+            var discount = _context.Discounts
+                .FirstOrDefault(x =>
+                    x.Code == code &&
+                    x.Status == 1 &&
+                    x.Quantity > 0 &&
+                    x.StartDate <= DateTime.Now &&
+                    x.EndDate >= DateTime.Now);
+
+            if (discount == null)
+                return Json(new { success = false, message = "Mã không hợp lệ hoặc hết hạn" });
+
+            decimal discountAmount = order.TotalAmount * discount.PercentValue / 100m;
+
+            order.TotalAmount -= discountAmount;
+
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                message = $"Giảm {discount.PercentValue}%",
+                newTotal = order.TotalAmount.ToString("N0")
+            });
+        }
+
+        [HttpPost]
+        public IActionResult PayOrder(int orderId, string paymentMethod, string discountCode)
         {
             var order = _context.Orders
                 .Include(o => o.OrderDetails)
@@ -317,10 +350,29 @@ namespace QLCafeHV.Areas.Employee.Controllers
             {
                 table.Status = "Đang trống";
             }
+
             try
             {
                 decimal totalAmount = order.OrderDetails.Sum(d => d.TotalPrice);
-             
+
+                // Nếu có mã giảm giá thì tính lại
+                if (!string.IsNullOrEmpty(discountCode))
+                {
+                    var discount = _context.Discounts.FirstOrDefault(x =>
+                        x.Code == discountCode &&
+                        x.Status == 1 &&
+                        x.Quantity > 0);
+
+                    if (discount != null)
+                    {
+                        decimal discountAmount = totalAmount * discount.PercentValue / 100m;
+                        totalAmount -= discountAmount;
+
+                        // Chỉ thanh toán mới trừ mã
+                        discount.Quantity -= 1;
+                    }
+                }
+
                 // Lưu Payment
                 var payment = new PaymentModel
                 {
@@ -329,20 +381,56 @@ namespace QLCafeHV.Areas.Employee.Controllers
                     PaidAmount = totalAmount,
                     PaymentTime = DateTime.Now
                 };
+
                 _context.Payments.Add(payment);
 
-                // Cập nhật Order
+                // Update Order
                 order.Status = "Đã thanh toán";
                 order.CheckOutTime = DateTime.Now;
+                order.TotalAmount = totalAmount;
 
                 _context.SaveChanges();
 
                 return Json(new { success = true });
-            }   
+            }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        [HttpGet]
+        public IActionResult GetShiftSummary()
+        {
+            int employeeId = HttpContext.Session.GetInt32("EmployeeID") ?? 0;
+
+            var today = DateTime.Today;
+
+            var shift = _context.EWorkShifts 
+             .FirstOrDefault(x =>x.EmployeeID == employeeId &&x.Status == "Opened");
+
+            if (shift == null)
+                return Json(new { success = false, message = "Chưa mở ca" });
+
+            decimal totalSales = _context.Payments
+                .Where(x => x.PaymentTime.Date == today)
+                .Sum(x => (decimal?)x.PaidAmount) ?? 0;
+
+            decimal expected = shift.OpenAmount + totalSales;
+
+            decimal difference = shift.CloseAmount.HasValue
+                ? shift.CloseAmount.Value - expected
+                : 0;
+
+            return Json(new
+            {
+                success = true,
+                openAmount = shift.OpenAmount,
+                totalSales = totalSales,
+                expected = expected,
+                closeAmount = shift.CloseAmount,
+                difference = difference
+            });
         }
     }
 }

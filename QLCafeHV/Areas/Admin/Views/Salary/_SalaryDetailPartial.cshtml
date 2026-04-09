@@ -1,0 +1,20 @@
+﻿@model List<SalaryAdjustmentModel>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Loại</th>
+        <th>Lý do</th>
+        <th>Số tiền</th>
+        <th>Ngày</th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Reason</td>
+            <td>@item.Note</td>
+            <td>@item.Amount.ToString("N0") VND</td>
+            <td>@item.AdjustmentDate.ToString("dd/MM/yyyy")</td>
+        </tr>
+    }
+</table>

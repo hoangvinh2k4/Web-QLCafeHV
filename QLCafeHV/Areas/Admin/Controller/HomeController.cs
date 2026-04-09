@@ -13,9 +13,9 @@ namespace QLCafeHV.Admin.Controllers
         {
             _context = context;
         }
+
         public IActionResult Index()
         {
-
             var role = HttpContext.Session.GetString("Role");
             if (role != "Admin")
             {
@@ -59,30 +59,62 @@ namespace QLCafeHV.Admin.Controllers
             // 5. Tổng doanh thu hôm nay
             var totalRevenue = paymentsToday.Sum(p => p.PaidAmount);
 
-            // 6. Doanh thu 7 ngày gần nhất
+            // 6. Doanh thu từng ngày trong tháng hiện tại
+            var daysInMonth = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
 
-            var last7DaysRevenue = _context.Payments
-                .Where(p => p.PaymentTime.Date >= DateTime.Today.AddDays(-6))
-                .GroupBy(p => p.PaymentTime.Date)
-                .Select(g => new
+            var dailyRevenue = Enumerable.Range(1, daysInMonth)
+                .Select(day => new
                 {
-                    Date = g.Key,
-                    Revenue = g.Sum(x => x.PaidAmount)
+                    Date = day,
+                    Revenue = _context.Payments
+                        .Where(p => p.PaymentTime.Day == day
+                                 && p.PaymentTime.Month == DateTime.Now.Month
+                                 && p.PaymentTime.Year == DateTime.Now.Year)
+                        .Sum(p => (decimal?)p.PaidAmount) ?? 0
                 })
-                .OrderBy(x => x.Date)
                 .ToList();
 
-            // 7. Truyền dữ liệu sang View
+            // 7. Doanh thu 12 tháng trong năm
+            var monthlyRevenue = Enumerable.Range(1, 12)
+                .Select(month => new
+                {
+                    Month = month,
+                    Revenue = _context.Payments
+                        .Where(p => p.PaymentTime.Month == month
+                                 && p.PaymentTime.Year == DateTime.Now.Year)
+                        .Sum(p => (decimal?)p.PaidAmount) ?? 0
+                })
+                .ToList();
+
+            // 8. Truyền dữ liệu sang View
             ViewBag.TotalOrders = totalOrders;
             ViewBag.TotalRevenue = totalRevenue;
             ViewBag.TotalItems = totalItems;
             ViewBag.TopProducts = topProducts;
-            ViewBag.Last7DaysRevenue = last7DaysRevenue;
+            ViewBag.Last7DaysRevenue = dailyRevenue;
+            ViewBag.MonthlyRevenue = monthlyRevenue;
 
             return View();
         }
 
+        [HttpGet]
+        public IActionResult GetRevenueByMonth(int month)
+        {
+            var daysInMonth = DateTime.DaysInMonth(DateTime.Now.Year, month);
+
+            var data = Enumerable.Range(1, daysInMonth)
+                .Select(day => new
+                {
+                    Day = day,
+                    Revenue = _context.Payments
+                        .Where(p => p.PaymentTime.Year == DateTime.Now.Year
+                                 && p.PaymentTime.Month == month
+                                 && p.PaymentTime.Day == day)
+                        .Sum(p => (decimal?)p.PaidAmount) ?? 0
+                })
+                .ToList();
+
+            return Json(data);
+        }
     }
 }
-
-

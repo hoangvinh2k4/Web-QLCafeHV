@@ -59,8 +59,15 @@
 <!-- Biểu đồ -->
 <div class="card mt-4 shadow-sm">
     <div class="card-body">
-        <h5>📈 Doanh thu 7 ngày gần nhất</h5>
-        <canvas id="revenueChart" height="100"></canvas>
+        <h5>📊 Doanh thu 12 tháng trong năm</h5>
+        <canvas id="monthChart" height="100"></canvas>
+    </div>
+</div>
+
+<div class="card mt-4 shadow-sm">
+    <div class="card-body">
+        <h5>📈 Doanh thu theo ngày trong tháng</h5>
+        <canvas id="dayChart" height="100"></canvas>
     </div>
 </div>
 
@@ -90,27 +97,84 @@
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    const ctx = document.getElementById('revenueChart').getContext('2d');
-    const chart = new Chart(ctx, {
+    const monthLabels = [
+        @Html.Raw(string.Join(",", ((IEnumerable<dynamic>)ViewBag.MonthlyRevenue)
+                        .Select(x => $"'Tháng {x.Month}'")))
+    ];
+
+    const monthData = [
+        @Html.Raw(string.Join(",", ((IEnumerable<dynamic>)ViewBag.MonthlyRevenue)
+                        .Select(x => x.Revenue)))
+    ];
+
+    let dayChart;
+
+    const monthChart = new Chart(document.getElementById('monthChart'), {
         type: 'bar',
         data: {
-            labels: [
-                @string.Join(",", ((IEnumerable<dynamic>)ViewBag.Last7DaysRevenue)
-                                        .Select(r => $"'{((DateTime)r.Date).ToString("dd/MM")}'"))
-            ],
+            labels: monthLabels,
             datasets: [{
-                label: 'Doanh thu (VNĐ)',
-                data: [
-                    @string.Join(",", ((IEnumerable<dynamic>)ViewBag.Last7DaysRevenue)
-                                                .Select(r => r.Revenue))
-                ],
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
+                label: 'Doanh thu tháng',
+                data: monthData
             }]
         },
-        options: { scales: { y: { beginAtZero: true } } }
+        options: {
+            onClick: function(e, elements) {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const month = index + 1;
+                    loadDailyRevenue(month);
+                }
+            }
+        }
     });
+
+    function loadDailyRevenue(month) {
+        fetch('/Admin/Home/GetRevenueByMonth?month=' + month)
+            .then(res => res.json())
+            .then(data => {
+
+                const labels = data.map(x => x.day);
+                const revenues = data.map(x => x.revenue);
+
+                if (dayChart) {
+                    dayChart.destroy();
+                }
+
+                dayChart = new Chart(document.getElementById('dayChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Doanh thu theo ngày',
+                            data: revenues
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                ticks: {
+                                    maxRotation: 0,
+                                    minRotation: 0
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString('vi-VN') + 'đ';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+
+    loadDailyRevenue(new Date().getMonth() + 1);
 </script>
 }

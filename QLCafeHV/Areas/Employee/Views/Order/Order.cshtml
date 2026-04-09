@@ -79,6 +79,17 @@
             </tbody>
         </table>
        </div>
+        <input type="hidden" id="AppliedDiscountCode" />
+        <div class="mt-3 d-flex justify-content-between align-items-center">
+            <label style="font-weight:500;">Mã giảm giá:</label>
+
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="discountCode" class="form-control" placeholder="Nhập mã" style="width:180px;" />
+                <button id="btnApplyDiscount" class="btn btn-success">
+                    Áp dụng
+                </button>
+            </div>
+        </div>
         <!-- Dropdown phương thức thanh toán --> 
         <div class="mt-3 d-flex justify-content-end align-items-center">
             <label for="paymentMethod" style="margin-right:10px; font-weight:500;">Phương thức thanh toán:</label> 
@@ -98,16 +109,39 @@
 
         <!-- Nút chức năng cuối cùng -->
         <div class="bottom-buttons" style="margin-top: 12px;">
+            <button class="btn btn-warning" onclick="openMergeTable(@ViewBag.TableId)">
+                <i class="fa-solid fa-code-merge"></i> Gộp bàn
+            </button>
             <a asp-controller="Home" asp-action="Index" asp-area="Employee" class="btn btn-red">Hủy bỏ</a>
             <button id="btnCancelOrder" class="btn btn-orange">Hủy đơn</button>
             <button id="btnPay" class="btn btn-blue">Thu tiền</button>
         </div>
+        <!--Popup gộp bàn -->
+        <div class="modal fade" id="mergeModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
 
+                    <div class="modal-header">
+                        <h5 class="modal-title">Chọn bàn để gộp</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <select id="mergeTableSelect" class="form-control"></select>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" onclick="confirmMerge()">Xác nhận</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+@section Scripts{
 <script>
     $(document).ready(function () {
 
@@ -209,18 +243,60 @@
                 renderOrderTable(items);
             });
         }
-       
-        // ====================== THANH TOÁN ======================
-        $("#btnPay").click(function () {
-            var orderId = $("#OrderId").val();
-            var paymentMethod = $("#paymentMethod").val();
+                // ====================== ÁP MGG ======================
+    $('#btnApplyDiscount').click(function () {
 
-            $.post("/Employee/Order/PayOrder", { orderId: orderId, paymentMethod: paymentMethod }, function (res) {
+        let code = $('#discountCode').val();
+        let orderId = $('#OrderId').val();
+
+        $.post('/Employee/Order/ApplyDiscount',
+            {
+                orderId: orderId,
+                code: code
+            },
+            function (res) {
+                if (res.success) {
+
+                    $('#totalAmount').text(res.newTotal);
+
+                    // Lưu mã để thanh toán dùng lại
+                    $('#AppliedDiscountCode').val(code);
+
+                    // Khóa nút tránh áp 2 lần
+                    $('#btnApplyDiscount').prop('disabled', true);
+
+                    Swal.fire({
+                        title: 'Thành công',
+                        text: res.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                } else {
+                    Swal.fire('Lỗi', res.message, 'error');
+                }
+            });
+    });
+        // ====================== THANH TOÁN ======================
+    $("#btnPay").click(function () {
+
+        var orderId = $("#OrderId").val();
+        var paymentMethod = $("#paymentMethod").val();
+        var discountCode = $("#AppliedDiscountCode").val();
+
+        $.post("/Employee/Order/PayOrder",
+            {
+                orderId: orderId,
+                paymentMethod: paymentMethod,
+                discountCode: discountCode
+            },
+            function (res) {
                 if (res.success) {
                     Swal.fire({
                         icon: "success",
                         title: "Thanh toán thành công!",
-                        timer: 1500,
+                        timer: 2000,
                         showConfirmButton: false
                     }).then(() => {
                         window.location.href = "/Employee/Home/Index";
@@ -233,7 +309,7 @@
                     });
                 }
             });
-        });
+    });
 
     });
         $(document).on("click", ".order-item-name", function () {
@@ -294,7 +370,48 @@
             $("#totalAmount").text(total.toLocaleString("vi-VN"));
             $("#amountToPay").text(total.toLocaleString("vi-VN"));
         }
+        // ====================== GỘP BÀN ======================
+        let currentTableId = 0;
+        function openMergeTable(tableId) {
+
+        currentTableId = tableId;
+
+        $.get('/Employee/Merge/GetOccupiedTables', { currentTableId: tableId }, function (data) {
+
+            $('#mergeTableSelect').empty();
+
+            data.forEach(item => {
+                $('#mergeTableSelect').append(
+                    `<option value="${item.tableID}">${item.tableName}</option>`
+                );
+            });
+
+            $('#mergeModal').modal('show');
+        });
+    }
+        function confirmMerge() {
+
+        let sourceTableId = $('#mergeTableSelect').val();
+
+        $.post('/Employee/Merge/MergeTables',
+    {
+        targetTableId: currentTableId,
+        sourceTableId: sourceTableId
+    },
+         function (res) {
+           if (res.success) {
+            Swal.fire({
+                title: 'Thành công',
+                text: res.message,
+                icon: 'success',
+                timer: 2500,
+                showConfirmButton: false
+            }).then(() => {
+                location.reload();
+            });
+
+        }
+    });  
 </script>
-
-
+}
 

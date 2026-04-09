@@ -1,0 +1,88 @@
+﻿@model List<DiscountModel>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/AdminLayout.cshtml";
+    ViewData["Title"] = "Bảng mã giảm giá";
+}
+
+<h2 style="margin-bottom:20px;">Bảng mã giảm giá</h2>
+<a asp-area="Admin" asp-controller="Discount" asp-action="Create" class="btn btn-primary mb-3">
+	+ Tạo mã giảm giá
+</a>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Mã</th>
+            <th>% giảm</th>
+            <th>Số lượng</th>
+            <th>Ngày bắt đầu</th>
+            <th>Ngày kết thúc</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Code</td>
+                <td>@item.PercentValue %</td>
+                <td>@item.Quantity</td>
+                <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
+                <td>@item.EndDate.ToString("dd/MM/yyyy")</td>
+                <td>
+                    @if (item.Status == 1)
+                    {
+                        <span class="badge bg-success">Hoạt động</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Ngừng</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.DiscountId" class="btn btn-warning btn-sm">
+                        Sửa
+                    </a>
+
+                    <form id="deleteForm-@item.DiscountId" asp-action="Delete" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@item.DiscountId" />
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.DiscountId)">
+                            Xóa
+                        </button>
+                    </form>
+                    
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@if (TempData["success"] != null)
+{
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: '@Html.Raw(TempData["success"])',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    </script>
+}
+<script>
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Bạn chắc chắn?',
+            text: 'Mã sẽ bị khóa',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Đồng ý'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('deleteForm-' + id).submit();
+            }
+        });
+    }
+</script>

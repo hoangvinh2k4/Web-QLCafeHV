@@ -29,6 +29,10 @@
             <i class="fa-solid fa-user-tie"></i> Nhân viên
         </a>
 
+        <a asp-controller="User" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-users"></i> Người dùng
+        </a>
+
         <a asp-controller="Face" asp-action="RegisterFace" asp-area="Admin">
             <i class="fa-solid fa-camera"></i> Đăng ký khuôn mặt
         </a>
@@ -41,13 +45,14 @@
             <i class="fa-solid fa-money-bill-wave"></i> Bảng lương
         </a>
 
-        <a asp-controller="User" asp-action="Index" asp-area="Admin">
-            <i class="fa-solid fa-users"></i> Người dùng
+        <a asp-controller="Discount" asp-action="Index" asp-area="Admin">
+            <i class="fa-solid fa-ticket"></i> Mã giảm giá
         </a>
+        
         <li class="menu-item">
             <a 
                 class="menu-link">
-                <i class="fa-solid fa-user-tie"></i> 
+                <i class="fa-solid fa-tags"></i>
                 <span>Đơn hàng</span>
                 <i class="fa-solid fa-chevron-down ms-auto"></i>
             </a>

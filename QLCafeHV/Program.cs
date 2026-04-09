@@ -1,5 +1,6 @@
 ﻿using QLCafeHV.Models.DbConnect;
 using Microsoft.EntityFrameworkCore;
+using QLCafeHV.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +15,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddDbContext<CoffeeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
-
+builder.Services.AddScoped<ISalaryService, SalaryService>();
+builder.Services.AddScoped<IMergeService, MergeService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSession(options =>
