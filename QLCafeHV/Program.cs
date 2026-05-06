@@ -1,5 +1,5 @@
-﻿using QLCafeHV.Models.DbConnect;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using QLCafeHV.Models.DbConnect;
 using QLCafeHV.Services;
 
 
@@ -17,6 +17,11 @@ builder.Services.AddDbContext<CoffeeContext>(options =>
 );
 builder.Services.AddScoped<ISalaryService, SalaryService>();
 builder.Services.AddScoped<IMergeService, MergeService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<TableService>();
+builder.Services.AddScoped<DiscountService>();
+builder.Services.AddScoped<ReviewService>();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSession(options =>

@@ -17,7 +17,14 @@
 
     <div class="form-group">
         <label>Danh mục</label>
-        <input asp-for="Category" class="form-control" />
+        <select asp-for="Category" class="form-control">
+            <option value="">-- Chọn danh mục --</option>
+            <option value="Cà phê">Cà phê</option>
+            <option value="Trà sữa">Trà sữa</option>
+            <option value="Nước ép">Nước ép</option>
+            <option value="Bánh ngọt">Bánh ngọt</option>
+            <option value="Đồ ăn vặt">Đồ ăn vặt</option>
+        </select>
     </div>
 
     <div class="form-group">
@@ -51,8 +58,7 @@
             <img id="previewImage" src="#" style="max-width:150px; display:none; border-radius:5px;" />
         }
     </div>
-
-    <button type="button" id="btnSave" class="btn btn-primary mt-3">Cập nhật sản phẩm</button>
+    <button type="button" id="btnSave" data-id="@Model.ProductID" class="btn btn-primary mt-3">Cập nhật sản phẩm</button>
 </form>
 
 @section Scripts {
@@ -76,15 +82,19 @@
             let form = $("#editForm")[0];
             let formData = new FormData(form);
 
+            // 👉 lấy id từ input hidden hoặc field
+            let id = $(this).data("id");
+
             $.ajax({
-                url: "@Url.Action("Edit", "Product", new { area = "Admin" })",
-                type: "POST",
+                url: "/api/ProductApi/" + id,   
+                type: "PUT",                   
                 data: formData,
                 processData: false,
                 contentType: false,
+
                 success: function (res) {
 
-                    if (res.success) {
+                    if (res.message) {
                         Swal.fire({
                             icon: "success",
                             title: "Thành công!",
@@ -94,17 +104,18 @@
                         });
 
                         setTimeout(() => {
-                            window.location.href = '@Url.Action("Index", "Product", new { area = "Admin" })';
+                            window.location.href = '/Admin/Product/Index';
                         }, 1500);
-
-                    } else {
+                    }
+                    else {
                         Swal.fire({
                             icon: "error",
                             title: "Lỗi!",
-                            text: res.message
+                            text: res.message || "Có lỗi xảy ra"
                         });
                     }
                 },
+
                 error: function () {
                     Swal.fire({
                         icon: "error",

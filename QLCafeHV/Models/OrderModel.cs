@@ -24,6 +24,8 @@ namespace QLCafeHV.Models
 
         [StringLength(20)]
         public string Status { get; set; }
+        public string? OrderType { get; set; }
+        public string? KitchenStatus { get; set; }
 
         public ICollection<OrderDetailModel> OrderDetails { get; set; }
     }

@@ -21,6 +21,7 @@ namespace QLCafeHV.Models
         [Required]
         [RegularExpression("Admin|Employee|User")]
         public string Role { get; set; }
+        public string Email { get; set; }
         [Required]
         [Range(0, 1, ErrorMessage = "Status chỉ nhận 0 hoặc 1")]
         public int Status { get; set; }

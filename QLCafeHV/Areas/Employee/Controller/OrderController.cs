@@ -38,7 +38,8 @@ namespace QLCafeHV.Areas.Employee.Controllers
                     EmployeeID = employeeId,
                     Status = "Đang phục vụ",
                     OrderTime = DateTime.Now,
-                    TotalAmount = 0
+                    TotalAmount = 0,
+                    KitchenStatus = "Chưa làm"
                 };
                 _context.Orders.Add(order);
                 _context.SaveChanges();
@@ -98,11 +99,10 @@ namespace QLCafeHV.Areas.Employee.Controllers
 
             return View(products);
         }
-       
+
         [HttpPost]
         public IActionResult AddItem(int orderId, int productId)
         {
-            // Load order + details + product
             var order = _context.Orders
                 .Include(o => o.OrderDetails)
                 .ThenInclude(d => d.Product)
@@ -113,7 +113,13 @@ namespace QLCafeHV.Areas.Employee.Controllers
             var product = _context.Products.Find(productId);
             if (product == null) return BadRequest("Sản phẩm không tồn tại!");
 
-            // Đổi trạng thái phục vụ
+            order.OrderType = "Offline";
+            // ✅ chỉ set khi cần
+            if (string.IsNullOrEmpty(order.KitchenStatus) || order.KitchenStatus == "Hoàn thành")
+            {
+                order.KitchenStatus = "Chưa làm";
+            }
+
             if (order.Status != "Đang phục vụ")
                 order.Status = "Đang phục vụ";
 
@@ -121,7 +127,6 @@ namespace QLCafeHV.Areas.Employee.Controllers
             if (table != null)
                 table.Status = "Đang phục vụ";
 
-            // Kiểm tra món trong order
             var detail = order.OrderDetails
                 .FirstOrDefault(x => x.ProductID == productId);
 
@@ -144,18 +149,15 @@ namespace QLCafeHV.Areas.Employee.Controllers
                 detail.TotalPrice = detail.Quantity * detail.UnitPrice;
             }
 
-            _context.SaveChanges();
-
-            // Cập nhật tổng tiền order
             order.TotalAmount = order.OrderDetails.Sum(x => x.TotalPrice);
+
             _context.SaveChanges();
 
-            // Trả danh sách mới cho JS
             var items = order.OrderDetails
                 .Select(x => new
                 {
                     productId = x.ProductID,
-                    name = x.Product.ProductName,
+                    name = x.Product != null ? x.Product.ProductName : "",
                     qty = x.Quantity,
                     unitprice = x.UnitPrice,
                     total = x.TotalPrice,

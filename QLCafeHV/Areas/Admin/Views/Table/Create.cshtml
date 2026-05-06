@@ -17,17 +17,28 @@
 
 @section Scripts {
     <script>
-        // AJAX thêm sản phẩm
         $("#btnAdd").click(function () {
-            let form = $("#createForm")[0];
-            let formData = new FormData(form);
+
+            let tableName = $("#TableName").val();
+
+            // validate nhẹ
+            if (!tableName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Thiếu dữ liệu',
+                    text: 'Vui lòng nhập tên bàn'
+                });
+                return;
+            }
 
             $.ajax({
-                url: '@Url.Action("Create", "Table", new { area = "Admin" })',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
+                url: "/api/TableApi/Create",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    tableName: tableName
+                }),
+
                 success: function (res) {
                     if (res.success) {
                         Swal.fire({
@@ -50,6 +61,7 @@
                         });
                     }
                 },
+
                 error: function () {
                     Swal.fire({
                         icon: 'error',

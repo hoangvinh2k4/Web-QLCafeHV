@@ -1,68 +1,207 @@
-﻿@model IEnumerable<ProductModel>
+﻿@model List<ProductModel>
 
-<div class="product-area">
-    <h3 class="feature-title orange-text">FEATURES ITEMS</h3>
+@{
+    var category = ViewBag.Category as string;
 
-    <div class="product-grid">
-        @foreach (var p in Model)
+    var groupedProducts = string.IsNullOrEmpty(category)
+        ? Model.GroupBy(p => p.Category)
+        : Model.Where(p => p.Category == category)
+               .GroupBy(p => p.Category);
+}
+
+@functions {
+    public string GetCategoryName(string category)
+    {
+        return category switch
         {
-            <div class="product-card">
-                <div class="product-image-placeholder">
-                    <img src="@p.ImageUrl" alt="@p.ProductName" />
-                </div>
-                <p class="price">@String.Format("{0:N0} VNĐ", p.Price)</p>
-                <p class="name">Tên sản phẩm: @p.ProductName</p>
-                <p class="brand">Danh mục: @p.Category</p>
+            "Cà phê" => "Cà phê",
+            "Trà sữa" => "Trà sữa",
+            "Nước ép" => "Nước ép",
+            "Bánh ngọt" => "Bánh ngọt",
+            "Đồ ăn vặt" => "Đồ ăn vặt",
+            _ => category
+        };
+    }
+}
+<main class="flex-1 min-w-0 pt-12 pb-12 px-8 bg-surface">
 
-                <button class="add-to-cart-btn"
-                        data-product-id="@p.ProductID">
-                    <i class="fa fa-shopping-cart"></i> Add to cart
-                </button>
-
-                <button class="add-to-wishlist-btn">
-                    <i class="fa fa-heart"></i> Add to wishlist
-                </button>
-            </div>
-        }
+    <!-- Title -->
+    <div class="mb-8 text-center">
+        <span class="inline-block bg-red-500 text-white text-xl font-bold px-8 py-3 rounded-full shadow-lg uppercase tracking-widest">
+            ⭐ Sản phẩm nổi bật
+        </span>
     </div>
-</div>
+    @foreach (var group in groupedProducts)
+    {
+      <div id="category-@group.Key">
+        <!-- Category Header -->
+            <div class="mb-6 mt-10">
+                <div class="inline-block">
+                    <h1 class="text-3xl font-bold">
+                        @GetCategoryName(group.Key)
+                    </h1>
+                    <div class="h-1 bg-primary"></div>
+                </div>
+            </div>
+
+            <div class="slider-wrapper">
+
+            <!-- Nút trái -->
+            <button onclick="scrollLeftBtn('@group.Key')"
+                    id="btnLeft-@group.Key"
+                    class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow px-2 py-2 rounded-full">
+                ◀
+            </button>
+
+            <!-- Nút phải -->
+            <button onclick="scrollRightBtn('@group.Key')"
+                    id="btnRight-@group.Key"
+                    class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow px-2 py-2 rounded-full">
+                ▶
+            </button>
+
+                <div id="slider-@group.Key"
+                     class="flex flex-nowrap overflow-x-auto gap-6 px-4 no-scrollbar">
+
+                    @foreach (var item in group)
+                    {
+                        <a asp-controller="Home"
+                           asp-action="ProductDetail"
+                           asp-route-id="@item.ProductID"
+                           class="group w-[200px] flex-shrink-0 block">
+
+                            <div class="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 p-3 flex flex-col h-full">
+
+                                <!-- IMAGE -->
+                                <div class="relative overflow-hidden rounded-lg h-48">
+
+                                    <img id="productImage" src="@item.ImageUrl"
+                                         class="w-full h-full object-cover transition duration-500 group-hover:scale-110" />
+
+                                    <!-- Overlay -->
+                                    <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition"></div>                               
+
+                                    <!-- HOT -->
+                                    <span class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                                        HOT
+                                    </span>
+
+                                </div>
+
+                                <!-- NAME -->
+                                <h2 class="text-sm font-semibold mt-3 line-clamp-2 min-h-[40px]">
+                                    @item.ProductName
+                                </h2>
+
+                                <!-- PRICE -->
+                                <div class="mt-auto">
+                                    <span class="text-base font-bold text-green-700">
+                                        @item.Price.ToVnd()
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </a>
+                    }
+
+                </div>
+        </div>
+      </div>
+      
+    }
+</main>
 
 <script>
-    $(document).on("click", ".add-to-cart-btn", function (e) {
-        e.preventDefault();
+      function getSlider(category) {
+        return document.getElementById("slider-" + category);
+    }
 
-        console.log("Clicked AddToCart"); // <<=== kiểm tra click có chạy không
+    function scrollRightBtn(category) {
+        const slider = getSlider(category);
+        if (!slider) return;
 
-        var productId = $(this).data("product-id");
-        console.log("ProductID = " + productId); // <<=== kiểm tra có lấy ID không
+        const item = slider.firstElementChild;
+        if (!item) return;
 
-        $.ajax({
-            url: '@Url.Action("AddToCart", "Cart")',
-            type: 'POST',
-            data: { productId: productId, quantity: 1 },
-            success: function (response) {
-                console.log("Response:", response); // <<=== kiểm tra server trả về gì
-
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Thành công!',
-                        text: response.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Lỗi',
-                        text: response.message
-                    });
-                }
-            },
-            error: function(xhr) {
-                console.log("AJAX ERROR", xhr.responseText); // <<=== nếu lỗi 404 hoặc 500
-            }
+        slider.scrollBy({
+            left: item.offsetWidth + 24,
+            behavior: "smooth"
         });
-    });
+    }
+
+    function scrollLeftBtn(category) {
+        const slider = getSlider(category);
+        if (!slider) return;
+
+        const item = slider.firstElementChild;
+        if (!item) return;
+
+        slider.scrollBy({
+            left: -(item.offsetWidth + 24),
+            behavior: "smooth"
+        });
+    }
+
+    function updateButtons(category) {
+        const slider = getSlider(category);
+        const btnLeft = document.getElementById("btnLeft-" + category);
+        const btnRight = document.getElementById("btnRight-" + category);
+
+        if (!slider || !btnLeft || !btnRight) return;
+
+        if (slider.scrollWidth <= slider.clientWidth) {
+            btnLeft.style.display = "none";
+            btnRight.style.display = "none";
+            return;
+        }
+
+        btnLeft.style.display = slider.scrollLeft <= 5 ? "none" : "block";
+
+        const isAtEnd =
+            slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 1;
+
+        btnRight.style.display = isAtEnd ? "none" : "block";
+    }
+
+    function enableDragScroll(slider) {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        slider.addEventListener("mousedown", (e) => {
+            isDown = true;
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener("mouseleave", () => isDown = false);
+        slider.addEventListener("mouseup", () => isDown = false);
+
+        slider.addEventListener("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            slider.scrollLeft = scrollLeft - walk;
+        });
+    }
+
+    function initSlider() {
+        document.querySelectorAll("[id^='slider-']").forEach(slider => {
+            const category = slider.id.split("-")[1];
+
+            slider.addEventListener("scroll", () => updateButtons(category));
+
+            setTimeout(() => {
+                updateButtons(category);
+            }, 100);
+
+            enableDragScroll(slider);
+        });
+    }
+
+    window.addEventListener("load", initSlider);
 </script>
 

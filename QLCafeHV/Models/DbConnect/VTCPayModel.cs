@@ -5,7 +5,10 @@
         public class PaymentRequestModel
         {
             public int OrderID { get; set; }
-            public decimal Amount { get; set; }
+            public string FullName { get; set; }
+            public string Phone { get; set; }
+            public string Address { get; set; }
+            public string District { get; set; }
             public string SmartcardSerial { get; set; }
             public string Package { get; set; }
             public int Months { get; set; }

@@ -7,9 +7,13 @@
 
     <!-- CSS -->
     <link href="~/css/user.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
+    <link href="~/css/productdetail.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
+    <link href="~/css/cart.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
 
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
 
     @RenderSection("Styles", required: false)
 </head>
@@ -24,8 +28,14 @@
             <nav class="main-nav">
                 <ul>
                     <li><a asp-area="" asp-controller="Home" asp-action="Index">HOME</a></li>
-                    <li><a asp-area="" asp-controller="Cart" asp-action="Cart">GIỎ HÀNG</a></li>
-                    <li><a href="/Favorites">YÊU THÍCH</a></li>
+                    <li>
+                        <div id="cartIcon" class="relative cursor-pointer inline-block">
+                            <a asp-area="" asp-controller="Cart" asp-action="Cart">
+                                GIỎ HÀNG
+                            </a>                                    
+                        </div>
+                    </li>
+                    <li><a asp-area="" asp-controller="WishList" asp-action="WishList">YÊU THÍCH</a></li>
                     <li><a href="/Shop">SHOP</a></li>
                     @{
                         var username = HttpContextAccessor.HttpContext.Session.GetString("Username");
@@ -80,30 +90,38 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="~/js/tailwind-config.js"></script>
+    
+
     @RenderSection("Scripts", required: false)
 
-    <script src="~/js/slider.js"></script>
     <!-- Sidebar JS -->
     <script>
         const sidebar = document.getElementById('sidebar');
         const menuIcon = document.querySelector('.menu-icon');
         const closeSidebar = document.getElementById('closeSidebar');
 
-        menuIcon.addEventListener('click', () => {
-            sidebar.classList.add('open');
-        });
+        if (menuIcon && sidebar) {
+            menuIcon.addEventListener('click', () => {
+                sidebar.classList.add('open');
+            });
+        }
 
-        closeSidebar.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-        });
+        if (closeSidebar && sidebar) {
+            closeSidebar.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+            });
+        }
 
         document.addEventListener('click', (e) => {
+            if (!sidebar || !menuIcon) return;
+
             if (!sidebar.contains(e.target) &&
                 !menuIcon.contains(e.target)) {
                 sidebar.classList.remove('open');
             }
         });
     </script>
-
 </body>
 </html>

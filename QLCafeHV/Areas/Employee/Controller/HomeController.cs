@@ -133,6 +133,37 @@ namespace QLCafeHV.Employee.Controllers
                 warningType = "normal"
             });
         }
+        [HttpGet]
+        public async Task<IActionResult> OnlineOrders()
+        {
+            var data = await _context.Orders
+                .Where(o => o.OrderType == "Online")
+                .Select(o => new OrderOnlineViewModel
+                {
+                    OrderCode = o.OrderCode,
+                    FullName = o.Employee.FullName,
+                    Address = o.Employee.Address,
+                    Phone = o.Employee.Phone,
+                    TotalAmount = o.TotalAmount
+                })
+                .ToListAsync();
+            return PartialView("~/Areas/Employee/Views/Order/_OnlineOrders.cshtml", data);
+        }
+        [HttpGet]
+        public async Task<IActionResult> OfflineOrders()
+        {
+            var data = await _context.Orders
+                .Where(o => o.OrderType == "Offline")
+                .Select(o => new OrderOfflineViewModel
+                {
+                    OrderId = o.OrderID.ToString(),
+                    TableName = o.Table.TableName,                 
+                    TotalAmount = o.TotalAmount
+                })
+                .ToListAsync();
+
+            return PartialView("~/Areas/Employee/Views/Order/_OfflineOrders.cshtml", data);
+        }
         private void HandleLatePenalty(int employeeId, EWorkShiftModel workShift, AWorkShiftModel shiftConfig)
         {
             DateTime now = workShift.OpenTime;

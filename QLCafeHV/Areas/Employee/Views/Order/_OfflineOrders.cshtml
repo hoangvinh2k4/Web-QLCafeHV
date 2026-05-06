@@ -1,0 +1,10 @@
+﻿@model List<QLCafeHV.Models.ViewModels.OrderOfflineViewModel>
+
+@foreach (var item in Model)
+{
+    <tr>
+        <td>@item.OrderId</td>
+        <td>@item.TableName</td>
+        <td>@item.TotalAmount.ToString("N0")</td>
+    </tr>
+}

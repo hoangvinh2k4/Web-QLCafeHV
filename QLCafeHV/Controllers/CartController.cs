@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.X509;
 using QLCafeHV.Models;
 using QLCafeHV.Models.DbConnect;
+using QLCafeHV.Models.ViewModels;
 
 namespace QLCafeHV.Controllers
 {
@@ -18,20 +20,45 @@ namespace QLCafeHV.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Auth");
 
-            // Lấy đơn hàng đang mở của user
             var order = _context.Orders
                 .Include(o => o.OrderDetails)
-                .ThenInclude(od => od.Product) // navigation property Product
+                .ThenInclude(od => od.Product)
                 .FirstOrDefault(o => o.EmployeeID == userId && o.Status == "Pending");
 
-            if (order != null && order.OrderDetails != null)
+            // 🔥 nếu không có đơn → giỏ trống
+            if (order == null)
             {
-                // Cập nhật lại tổng tiền
-                order.TotalAmount = order.OrderDetails.Sum(od => od.TotalPrice);
+                return View(new CartViewModel
+                {
+                    Order = null,
+                    Details = new List<CartDetailViewModel>()
+                });
+            }
+
+            // update total
+            if (order.OrderDetails != null && order.OrderDetails.Any())
+            {
+                order.TotalAmount = order.OrderDetails.Sum(x => x.TotalPrice);
                 _context.SaveChanges();
             }
 
-            return View(order);
+            var model = new CartViewModel
+            {
+                Order = order,
+                Details = order.OrderDetails.Select(x => new CartDetailViewModel
+                {
+                    OrderDetailID = x.OrderDetailID,
+                    OrderID = x.OrderID,
+                    ProductName = x.Product?.ProductName,
+                    ImageUrl = x.Product?.ImageUrl,
+                    UnitPrice = x.UnitPrice,
+                    CategoryName = x.Product?.Category,
+                    Quantity = x.Quantity,
+                    TotalPrice = x.TotalPrice
+                }).ToList()
+            };
+
+            return View(model);
         }
         [HttpPost]
         public IActionResult AddToCart(int productId, int quantity = 1)
@@ -60,7 +87,8 @@ namespace QLCafeHV.Controllers
                     OrderTime = DateTime.Now,
                     Status = "Pending",
                     TotalAmount = 0,
-                    OrderDetails = new List<OrderDetailModel>() // khởi tạo collection
+                    OrderType="Online",
+                    OrderDetails = new List<OrderDetailModel>()
                 };
                 _context.Orders.Add(order);
                 _context.SaveChanges();
@@ -101,33 +129,118 @@ namespace QLCafeHV.Controllers
 
             return Json(new { success = true, message = $"Đã thêm {product.ProductName} vào giỏ hàng!" });
         }
+
         [HttpPost]
         public IActionResult RemoveItem(int orderDetailId)
         {
             var userId = HttpContext.Session.GetInt32("EmployeeID");
             if (userId == null)
-                return Json(new { success = false, message = "Bạn cần đăng nhập" });
+                return Json(new { success = false, message = "Bạn chưa đăng nhập" });
 
-            var orderDetail = _context.OrderDetails
-                .Include(od => od.Order)
-                .FirstOrDefault(od => od.OrderDetailID == orderDetailId);
+            var detail = _context.OrderDetails
+                .Include(x => x.Order)
+                .FirstOrDefault(x => x.OrderDetailID == orderDetailId);
 
-            if (orderDetail == null || orderDetail.Order.EmployeeID != userId)
-                return Json(new { success = false, message = "Sản phẩm không tồn tại trong giỏ hàng" });
+            if (detail == null || detail.Order.EmployeeID != userId)
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm" });
 
-            var order = orderDetail.Order;
+            var order = detail.Order;
 
-            _context.OrderDetails.Remove(orderDetail);
+            _context.OrderDetails.Remove(detail);
+            _context.SaveChanges();
 
-            // Cập nhật lại tổng tiền
-            order.TotalAmount = order.OrderDetails
-                .Where(od => od.OrderDetailID != orderDetailId)
-                .Sum(od => od.TotalPrice);
+            // cập nhật tổng tiền
+            var total = _context.OrderDetails
+                .Where(x => x.OrderID == order.OrderID)
+                .Sum(x => (decimal?)x.TotalPrice) ?? 0;
+
+            order.TotalAmount = total;
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                totalAmount = total
+            });
+        }
+
+        [HttpPost]
+        public IActionResult IncreaseQuantity(int id)
+        {
+            var detail = _context.OrderDetails.FirstOrDefault(x => x.OrderDetailID == id);
+            if (detail == null)
+                return Json(new { success = false });
+
+            detail.Quantity += 1;
+            detail.TotalPrice = detail.Quantity * detail.UnitPrice;
 
             _context.SaveChanges();
 
-            return Json(new { success = true, message = "Sản phẩm đã được xóa khỏi giỏ hàng", totalAmount = order.TotalAmount });
+            return Json(new
+            {
+                success = true,
+                quantity = detail.Quantity,
+                totalPrice = detail.TotalPrice
+            });
+        }
+        [HttpPost]
+        public IActionResult DecreaseQuantity(int id)
+        {
+            var detail = _context.OrderDetails.FirstOrDefault(x => x.OrderDetailID == id);
+            if (detail == null)
+                return Json(new { success = false });
+
+            // ❌ Nếu đang là 1 thì không cho giảm nữa
+            if (detail.Quantity <= 1)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Số lượng tối thiểu là 1"
+                });
+            }
+
+            // ✅ Giảm bình thường
+            detail.Quantity--;
+            detail.TotalPrice = detail.Quantity * detail.UnitPrice;
+
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                quantity = detail.Quantity,
+                totalPrice = detail.TotalPrice
+            });
+        }
+        [HttpPost]
+        public IActionResult UpdateQuantity([FromBody] UpdateQuantityRequest req)
+        {
+            var detail = _context.OrderDetails.FirstOrDefault(x => x.OrderDetailID == req.Id);
+            if (detail == null)
+                return Json(new { success = false });
+
+            // ❌ chặn nhỏ hơn 1
+            if (req.Quantity < 1)
+                req.Quantity = 1;
+
+            detail.Quantity = req.Quantity;
+            detail.TotalPrice = detail.Quantity * detail.UnitPrice;
+
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                quantity = detail.Quantity,
+                totalPrice = detail.TotalPrice
+            });
         }
 
+        public class UpdateQuantityRequest
+        {
+            public int Id { get; set; }
+            public int Quantity { get; set; }
+        }
     }
 }

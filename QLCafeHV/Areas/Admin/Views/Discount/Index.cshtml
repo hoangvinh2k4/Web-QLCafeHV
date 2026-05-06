@@ -46,43 +46,52 @@
                         Sửa
                     </a>
 
-                    <form id="deleteForm-@item.DiscountId" asp-action="Delete" method="post" style="display:inline;">
-                        <input type="hidden" name="id" value="@item.DiscountId" />
-                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(@item.DiscountId)">
-                            Xóa
-                        </button>
-                    </form>
+                    <button class="btn btn-danger btn-sm btnDelete" data-id="@item.DiscountId">
+                        Xóa
+                    </button>
                     
                 </td>
             </tr>
         }
     </tbody>
 </table>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@if (TempData["success"] != null)
-{
+@section Scripts {
     <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Thành công',
-            text: '@Html.Raw(TempData["success"])',
-            timer: 2000,
-            showConfirmButton: false
+        $(document).on("click", ".btnDelete", function () {
+
+            let id = $(this).data("id");
+            let row = $(this).closest("tr");
+
+            Swal.fire({
+                title: "Bạn có chắc muốn xóa?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Có",
+                cancelButtonText: "Hủy"
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    $.ajax({
+                        url: "/api/DiscountApi/Delete/" + id,
+                        type: "POST",
+
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire("Thành công", res.message, "success");
+                                row.remove();
+                            } else {
+                                Swal.fire("Lỗi", res.message, "error");
+                            }
+                        },
+
+                        error: function () {
+                            Swal.fire("Lỗi", "Không thể xóa!", "error");
+                        }
+                    });
+
+                }
+            });
         });
     </script>
 }
-<script>
-    function confirmDelete(id) {
-        Swal.fire({
-            title: 'Bạn chắc chắn?',
-            text: 'Mã sẽ bị khóa',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Đồng ý'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('deleteForm-' + id).submit();
-            }
-        });
-    }
-</script>

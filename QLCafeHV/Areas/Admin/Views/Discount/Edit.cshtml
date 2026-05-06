@@ -12,6 +12,10 @@
     <input type="hidden" asp-for="DiscountId" />
 
     <div class="mb-2">
+        <label>Mã giảm giá</label>
+        <input asp-for="Code" class="form-control" />
+    </div>
+    <div class="mb-2">
         <label>Phần trăm giảm (%)</label>
         <input asp-for="PercentValue" class="form-control" />
     </div>
@@ -39,21 +43,75 @@
         </select>
     </div>
 
-    <button type="submit" class="btn btn-success">
+    <button type="button" id="btnSave" class="btn btn-success">
         Cập nhật
     </button>
 
 </form>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@if (TempData["success"] != null)
-{
+@section Scripts {
     <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Thành công',
-            text: '@Html.Raw(TempData["success"])',
-            timer: 2000,
-            showConfirmButton: false
+
+        $(document).ready(function () {
+            $("#btnSave").click(handleUpdate);
         });
+
+        function handleUpdate() {
+
+            let data = getFormData();
+
+            // 👉 chỉ check nhẹ
+            if (!data.code) {
+                Swal.fire("Thiếu dữ liệu", "Vui lòng nhập mã", "warning");
+                return;
+            }
+
+            callApi(data);
+        }
+
+        function getFormData() {
+            return {
+                id: $("#DiscountId").val(),
+                code: $("#Code").val(),
+                percentValue: parseInt($("#PercentValue").val()),
+                quantity: parseInt($("#Quantity").val()),
+                startDate: $("#StartDate").val(),
+                endDate: $("#EndDate").val(),
+                status: $("#Status").val(),
+            };
+        }
+
+        function callApi(data) {
+
+            $.ajax({
+                url: "/api/DiscountApi/" + data.id,
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+
+                success: function (res) {
+
+                    if (res.success) {
+                        Swal.fire("Thành công", res.message, "success");
+
+                        setTimeout(() => {
+                            window.location.href = '/Admin/Discount/Index';
+                        }, 1500);
+
+                    } else {
+                        // 👉 lỗi từ SERVICE trả về
+                        Swal.fire("Lỗi", res.message, "error");
+                    }
+                },
+
+                error: function (err) {
+                    Swal.fire(
+                        "Lỗi server",
+                        err.responseJSON?.message || "Có lỗi xảy ra",
+                        "error"
+                    );
+                }
+            });
+        }
+
     </script>
 }

@@ -1,0 +1,13 @@
+﻿@model List<QLCafeHV.Models.ViewModels.OrderOnlineViewModel>
+<tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.OrderCode</td>
+            <td>@item.FullName</td>
+            <td>@item.Address</td>
+            <td>@item.Phone</td>
+            <td>@item.TotalAmount</td>
+        </tr>
+    }
+</tbody>

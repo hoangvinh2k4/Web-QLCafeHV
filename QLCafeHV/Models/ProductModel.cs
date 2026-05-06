@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace QLCafeHV.Models
@@ -16,6 +17,9 @@ namespace QLCafeHV.Models
 
         [StringLength(255)]
         public string? ImageUrl { get; set; }
+
+        [NotMapped]
+        public IFormFile ImageFile { get; set; } // 👈 thêm dòng này
         public DateTime CreatedTime { get; set; }
         public DateTime? UpdatedTime { get; set; }
 

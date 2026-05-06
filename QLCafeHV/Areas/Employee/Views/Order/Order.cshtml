@@ -389,29 +389,29 @@
             $('#mergeModal').modal('show');
         });
     }
-        function confirmMerge() {
+                function confirmMerge() {
 
-        let sourceTableId = $('#mergeTableSelect').val();
+            let sourceTableId = $('#mergeTableSelect').val();
 
-        $.post('/Employee/Merge/MergeTables',
-    {
-        targetTableId: currentTableId,
-        sourceTableId: sourceTableId
-    },
-         function (res) {
-           if (res.success) {
-            Swal.fire({
-                title: 'Thành công',
-                text: res.message,
-                icon: 'success',
-                timer: 2500,
-                showConfirmButton: false
-            }).then(() => {
-                location.reload();
+            $.post('/Employee/Merge/MergeTables',
+            {
+                targetTableId: currentTableId,
+                sourceTableId: sourceTableId
+            },
+            function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        title: 'Thành công',
+                        text: res.message,
+                        icon: 'success',
+                        timer: 2500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
             });
-
         }
-    });  
 </script>
 }
 

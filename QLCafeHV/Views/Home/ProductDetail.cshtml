@@ -1,0 +1,527 @@
+﻿@model ProductModel
+@{
+    ViewData["Title"] = Model.ProductName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<main class="max-w-7xl mx-auto px-4 pt-32 pb-8">
+
+    <!-- Breadcrumb -->
+    <nav class="mb-8 text-xs uppercase text-gray-500">
+        <a href="/">TRANG CHỦ</a> /
+        <span>@Model.Category</span>
+    </nav>
+
+    <div class="flex flex-col lg:flex-row gap-12">
+
+        <!-- LEFT -->
+        <section class="flex-1">
+
+            <div class="flex flex-col md:flex-row gap-8">
+
+                <!-- IMAGE CARD -->
+                <div class="w-full md:w-1/2">
+                    <div class="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
+                        <div class="aspect-square bg-gray-100 overflow-hidden">
+                            <img id="productImage"
+                                 src="@Model.ImageUrl"
+                                 alt="@Model.ProductName"
+                                 class="w-full h-full object-cover hover:scale-105 transition duration-300" />
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- INFO -->
+                <div class="flex-1 space-y-4">
+
+                    <h1 class="text-2xl font-bold text-gray-800">
+                        @Model.ProductName
+                    </h1>
+
+                    <p class="text-xl font-bold text-green-700">
+                        @Model.Price.ToVnd()
+                    </p>
+
+                    <div class="text-sm">
+                        <span class="text-gray-600">Trạng thái:</span>
+
+                        @if (Model.Status == 1)
+                        {
+                            <span class="text-green-600 font-medium">Còn bán</span>
+                        }
+                        else
+                        {
+                            <span class="text-red-500 font-medium">Ngừng bán</span>
+                        }
+                    </div>
+
+                    <!-- ACTION -->
+                    <div class="flex items-center gap-4 pt-4">
+
+                        <div class="flex border border-gray-300 rounded-lg overflow-hidden">
+                            <button type="button"
+                                    class="px-3 py-2 hover:bg-gray-100"
+                                    onclick="this.nextElementSibling.stepDown()">
+                                -
+                            </button>
+
+                            <input type="number" value="1" min="1"
+                                   class="w-12 text-center border-none focus:ring-0" />
+
+                            <button type="button"
+                                    class="px-3 py-2 hover:bg-gray-100"
+                                    onclick="this.previousElementSibling.stepUp()">
+                                +
+                            </button>
+                        </div>
+
+                        <button id="addToCartBtn" data-id="@Model.ProductID"
+                                class="bg-[#d4b476] hover:bg-[#c2a368] text-white px-8 py-2 rounded-lg uppercase transition">
+                            THÊM VÀO GIỎ HÀNG
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT (RELATED) -->
+        <aside class="w-full lg:w-80 space-y-4">
+
+            <h3 class="text-sm font-bold uppercase text-gray-700 mb-2">
+                Sản phẩm liên quan
+            </h3>
+
+            @if (ViewBag.RelatedProducts != null)
+            {
+                @foreach (var item in ViewBag.RelatedProducts as List<ProductModel>)
+                {
+                    <a asp-action="ProductDetail" asp-route-id="@item.ProductID"
+                       class="flex gap-3 p-2 rounded-xl border border-gray-100 hover:shadow-md hover:bg-gray-50 transition">
+
+                        <div class="w-20 h-20 overflow-hidden rounded-lg bg-gray-100">
+                            <img src="@item.ImageUrl"
+                                 class="w-full h-full object-cover" />
+                        </div>
+
+                        <div class="flex-1">
+                            <h4 class="text-xs font-semibold uppercase line-clamp-2 text-gray-700">
+                                @item.ProductName
+                            </h4>
+
+                            <p class="text-sm font-bold text-green-700 mt-1">
+                                @item.Price.ToVnd()
+                            </p>
+                        </div>
+
+                    </a>
+                }
+            }
+
+        </aside>
+
+    </div>
+
+</main>
+
+<div class="max-w-7xl mx-auto px-4 mt-10 font-sans flex items-center gap-6 mb-6 p-4 border rounded-lg bg-gray-50">
+
+    <!-- Trung bình -->
+    <div class="text-center">
+        <div id="avgRating" class="text-3xl font-bold text-[#d4b476]">0</div>
+        <div class="text-sm text-gray-500">trên 5</div>
+    </div>
+
+    <!-- Sao tổng -->
+    <div class="flex-1">
+        <div id="starAvg" class="text-yellow-500 text-xl">☆☆☆☆☆</div>
+        <div id="totalReview" class="text-sm text-gray-500 mt-1">
+            0 đánh giá
+        </div>
+    </div>
+
+</div>
+
+<!-- ===================== -->
+<!-- REVIEW SECTION -->
+<!-- ===================== -->
+<section class="max-w-7xl mx-auto px-4 mt-10 font-sans text-gray-800">
+
+    <!-- LIST -->
+    <div id="reviewList" class="space-y-4"></div>
+
+    <!-- EMPTY -->
+    <p id="noReviewText" class="text-gray-500 italic mt-4">
+        Chưa có đánh giá nào
+    </p>
+
+    <!-- ===================== -->
+    <!-- FORM -->
+    <!-- ===================== -->
+    <div class="border-2 border-[#d4b476] p-6 md:p-10 mt-10">
+
+        <h3 class="text-lg font-bold mb-6">
+            Hãy là người đầu tiên nhận xét “@Model.ProductName”
+        </h3>
+
+        <!-- hidden -->
+        <input type="hidden" id="ProductId" value="@Model.ProductID" />
+        <input type="hidden" id="Rating" value="0" />
+
+        <form id="reviewForm" class="space-y-6">
+
+            <!-- Rating -->
+            <div>
+                <label class="block font-semibold mb-2">Đánh giá *</label>
+
+                <div id="starRating" class="flex gap-2 text-2xl cursor-pointer select-none">
+                    <span data-value="1" class="text-gray-300">★</span>
+                    <span data-value="2" class="text-gray-300">★</span>
+                    <span data-value="3" class="text-gray-300">★</span>
+                    <span data-value="4" class="text-gray-300">★</span>
+                    <span data-value="5" class="text-gray-300">★</span>
+                </div>
+            </div>
+
+            <!-- Comment -->
+            <div>
+                <label class="block font-semibold mb-2">Nhận xét *</label>
+                <textarea id="Comment"
+                          rows="4"
+                          class="w-full border p-3 focus:border-[#d4b476] outline-none"></textarea>
+            </div>
+
+            <!-- Info -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <input id="Author"
+                       placeholder="Tên *"
+                       class="border p-2 w-full" />
+
+                <input id="Email"
+                       placeholder="Email *"
+                       class="border p-2 w-full" />
+            </div>
+
+            <!-- Submit -->
+            <button type="submit"
+                    class="bg-[#d4b476] text-white px-8 py-3 font-bold uppercase hover:opacity-90">
+                Gửi đánh giá
+            </button>
+
+        </form>
+    </div>
+
+</section>
+
+<!-- RELATED PRODUCTS GRID -->
+<section class="max-w-7xl mx-auto px-4 py-12">
+
+    <!-- HEADER -->
+    <div class="text-center mb-12">
+        <p class="text-[#d4b476] uppercase tracking-widest text-sm font-semibold mb-2">
+            Coffee HV
+        </p>
+
+        <h2 class="text-2xl md:text-3xl font-bold uppercase">
+            Có thể bạn thích
+        </h2>
+
+        <div class="flex items-center justify-center gap-4 mt-2">
+            <div class="h-[1px] bg-gray-300 w-20"></div>
+            <span class="text-[#d4b476]">✿</span>
+            <div class="h-[1px] bg-gray-300 w-20"></div>
+        </div>
+    </div>
+
+    <!-- SUB TITLE -->
+    <div class="mb-6 border-b pb-2">
+        <h3 class="text-lg font-bold uppercase">
+            Sản phẩm đang bán chạy nhất
+        </h3>
+    </div>
+
+    <!-- GRID -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+
+        @if (ViewBag.BestSeller != null)
+        {
+            @foreach (var item in ViewBag.BestSeller as List<ProductModel>)
+            {
+                <a asp-action="ProductDetail" asp-route-id="@item.ProductID"
+                   class="group block">
+
+                    <div class="rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300 overflow-hidden">
+
+                        <div class="aspect-square bg-gray-100 overflow-hidden">
+                            <img src="@item.ImageUrl"
+                                 alt="@item.ProductName"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                        </div>
+
+                        <div class="text-center px-3 py-3">
+                            <h4 class="text-sm font-medium mb-1 line-clamp-2 h-10 text-gray-700">
+                                @item.ProductName
+                            </h4>
+
+                            <p class="text-sm font-bold text-green-700">
+                                @item.Price.ToVnd()
+                            </p>
+                        </div>
+
+                    </div>
+
+                </a>
+            }
+        }
+
+    </div>
+
+</section>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+
+    // =====================
+    // 🛒 ADD TO CART
+    // =====================
+    document.getElementById("addToCartBtn").addEventListener("click", function () {
+
+        const productId = this.getAttribute("data-id");
+        const quantity = document.querySelector("input[type='number']")?.value || 1;
+
+        fetch('/Cart/AddToCart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `productId=${productId}&quantity=${quantity}`
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data.success) {
+                alert(data.message);
+                return;
+            }
+
+            const img = document.getElementById("productImage");
+            const cart = document.getElementById("cartIcon");
+
+            const imgRect = img.getBoundingClientRect();
+            const cartRect = cart.getBoundingClientRect();
+
+            const flyIcon = document.createElement("div");
+            flyIcon.classList.add("fly-icon");
+
+            flyIcon.style.backgroundImage = `url(${img.src})`;
+
+            flyIcon.style.top = (imgRect.top + imgRect.height / 2) + "px";
+            flyIcon.style.left = (imgRect.left + imgRect.width / 2) + "px";
+
+            document.body.appendChild(flyIcon);
+
+            setTimeout(() => {
+                flyIcon.style.top = cartRect.top + "px";
+                flyIcon.style.left = cartRect.left + "px";
+                flyIcon.style.transform = "scale(0.5)";
+                flyIcon.style.opacity = "0.6";
+            }, 10);
+
+            setTimeout(() => {
+                flyIcon.remove();
+
+                count += parseInt(quantity);
+                document.getElementById("cartCount").innerText = count;
+
+            }, 800);
+
+        })
+        .catch(() => alert("Có lỗi xảy ra!"));
+    });
+
+
+    // =====================
+    // ⭐ REVIEW RATING
+    // =====================
+    let selectedRating = 0;
+
+    $("#starRating span").click(function () {
+
+        selectedRating = $(this).data("value");
+        $("#Rating").val(selectedRating);
+
+        $("#starRating span").each(function () {
+            if ($(this).data("value") <= selectedRating) {
+                $(this).removeClass("text-gray-300").addClass("text-[#d4b476]");
+            } else {
+                $(this).removeClass("text-[#d4b476]").addClass("text-gray-300");
+            }
+        });
+    });
+
+
+    // =====================
+    // 💬 SUBMIT REVIEW
+    // =====================
+    $("#reviewForm").submit(function (e) {
+        e.preventDefault();
+
+        let data = {
+            productId: $("#ProductId").val(),
+            customerName: $("#Author").val(),
+            email: $("#Email").val(),
+            rating: parseInt($("#Rating").val()),
+            comment: $("#Comment").val()
+        };
+
+        if (data.rating === 0) {
+            Swal.fire("Lỗi", "Vui lòng chọn số sao", "warning");
+            return;
+        }
+
+        $.ajax({
+            url: "/api/ReviewApi/Create",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+
+            success: function (res) {
+
+                if (res.success) {
+                    Swal.fire("Thành công", res.message, "success");
+
+                    // reset form
+                    $("#reviewForm")[0].reset();
+                    $("#Rating").val(0);
+                    $("#starRating span").removeClass("text-[#d4b476]").addClass("text-gray-300");
+
+                    loadReviews();
+                } else {
+                    Swal.fire("Lỗi", res.message, "error");
+                }
+            },
+
+            error: function () {
+                Swal.fire("Lỗi", "Không gửi được đánh giá!", "error");
+            }
+        });
+    });
+
+        function renderStars(rating) {
+        let html = "";
+
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                html += `<span class="text-yellow-500">★</span>`;
+            } else {
+                html += `<span class="text-gray-300">★</span>`;
+            }
+        }
+
+        return html;
+    }
+    // =====================
+    // 📥 LOAD REVIEWS
+    // =====================
+    function loadReviews() {
+
+        let productId = $("#ProductId").val();
+
+        $.ajax({
+            url: "/api/ReviewApi/Product/" + productId,
+            type: "GET",
+
+            success: function (res) {
+
+                let data = res.data ?? res;
+
+                console.log("REVIEWS:", data);
+
+                // =====================
+                // KHÔNG CÓ REVIEW
+                // =====================
+                if (!data || data.length === 0) {
+
+                    $("#avgRating").text("0");
+                    $("#totalReview").text("0 đánh giá");
+                    $("#starAvg").html("☆☆☆☆☆");
+
+                    $("#reviewList").html("");
+                    $("#noReviewText").show();
+
+                    return;
+                }
+
+                $("#noReviewText").hide();
+
+                // =====================
+                // TÍNH TRUNG BÌNH
+                // =====================
+                let total = data.length;
+
+                let sum = data.reduce((a, r) =>
+                    a + (r.rating ?? r.Rating ?? 0), 0);
+
+                let avg = sum / total;
+
+                $("#avgRating").text(avg.toFixed(1));
+                $("#totalReview").text(total + " đánh giá");
+
+                // ⭐ sao tổng (đẹp hơn)
+                $("#starAvg").html(renderStars(Math.round(avg)));
+
+                // =====================
+                // DANH SÁCH REVIEW
+                // =====================
+                let html = "";
+
+                data.forEach(r => {
+
+                    let rating = r.rating ?? r.Rating ?? 0;
+                    let name = r.customerName ?? r.CustomerName ?? "Ẩn danh";
+                    let comment = r.comment ?? r.Comment ?? "";
+                    let date = r.createdTime ?? r.CreatedTime;
+
+                    html += `
+                        <div class="border p-4 rounded mb-3 bg-white shadow-sm">
+
+                            <div class="font-bold text-gray-800">
+                                ${name}
+                            </div>
+
+                            <!-- ⭐ SAO -->
+                            <div class="text-lg">
+                                ${renderStars(rating)}
+                            </div>
+
+                            <p class="mt-1 text-gray-700">
+                                ${comment}
+                            </p>
+
+                            <div class="text-sm text-gray-400 mt-2">
+                                    ${new Date(date).toLocaleString('vi-VN', 
+                                    {
+                                         year: 'numeric',
+                                         month: '2-digit',
+                                         day: '2-digit',
+                                         hour: '2-digit',
+                                         minute: '2-digit'
+                                    })}
+                            </div>
+
+                        </div>
+                    `;
+                });
+
+                $("#reviewList").html(html);
+            },
+
+            error: function () {
+                $("#noReviewText").text("Không tải được đánh giá.");
+            }
+        });
+    }
+    loadReviews();
+
+</script>

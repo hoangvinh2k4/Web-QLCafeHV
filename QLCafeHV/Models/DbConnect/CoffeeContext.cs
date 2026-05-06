@@ -10,6 +10,7 @@ namespace QLCafeHV.Models.DbConnect
         public DbSet<ProductModel> Products { get; set; }
         public DbSet<OrderModel> Orders { get; set; }
         public DbSet<OrderDetailModel> OrderDetails { get; set; }
+        public DbSet<OrderDeliveryModel> OrderDeliveries { get; set; }
         public DbSet<EmployeeModel> Employees { get; set; }
         public DbSet<AccountModel> Accounts { get; set; }
         public DbSet<PaymentModel> Payments { get; set; }
@@ -18,6 +19,7 @@ namespace QLCafeHV.Models.DbConnect
         public DbSet<DiscountModel> Discounts { get; set; }
         public DbSet<EWorkShiftModel> EWorkShifts { get; set; }
         public DbSet<AWorkShiftModel> AWorkShifts { get; set; }
+        public DbSet<ReviewModel> Reviews { get; set; }
     
     }
 }

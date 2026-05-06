@@ -15,7 +15,14 @@
 
     <div class="form-group">
         <label>Danh mục</label>
-        <input asp-for="Category" class="form-control" />
+        <select asp-for="Category" class="form-control">
+            <option value="">-- Chọn danh mục --</option>
+            <option value="Cà phê">Cà phê</option>
+            <option value="Trà sữa">Trà sữa</option>
+            <option value="Nước ép">Nước ép</option>
+            <option value="Bánh ngọt">Bánh ngọt</option>
+            <option value="Đồ ăn vặt">Đồ ăn vặt</option>
+        </select>
     </div>
 
     <div class="form-group">
@@ -66,43 +73,41 @@
         });
 
         // AJAX thêm sản phẩm
-        $("#btnAdd").click(function () {
+                 $("#btnAdd").click(function () {
+
             let form = $("#createForm")[0];
             let formData = new FormData(form);
 
             $.ajax({
-                url: '@Url.Action("Create", "Product", new { area = "Admin" })',
+                url: '/api/ProductApi/Create',
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
+
                 success: function (res) {
-                    if (res.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Thành công!',
-                            text: res.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
 
-                        setTimeout(() => {
-                            window.location.href = '@Url.Action("Index", "Product", new { area = "Admin" })';
-                        }, 1500);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công!',
+                        text: res.message || "Thêm sản phẩm thành công!",
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
 
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Lỗi!',
-                            text: res.message
-                        });
-                    }
+                    setTimeout(() => {
+                        window.location.href = '/Admin/Product/Index';
+                    }, 1500);
                 },
-                error: function () {
+
+                error: function (err) {
+
+                    console.log(err);
+
                     Swal.fire({
                         icon: 'error',
-                        title: 'Lỗi server',
-                        text: 'Không gửi được dữ liệu!'
+                        title: 'Lỗi!',
+                        text: err.responseJSON?.message || "Dữ liệu không hợp lệ!"
                     });
                 }
             });

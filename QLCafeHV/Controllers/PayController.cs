@@ -32,14 +32,55 @@ namespace QLCafeHV.Controllers
         {
             try
             {
+                if (request == null || request.OrderID <= 0)
+                {
+                    return Json(new PaymentURLResponseData
+                    {
+                        ResponseCode = -1,
+                        Description = "Dữ liệu không hợp lệ"
+                    });
+                }
 
                 int orderId = request.OrderID;
-                var order = _context.Orders.FirstOrDefault(o => o.OrderID == request.OrderID);
+
+                // 🔥 LẤY ORDER + DETAILS
+                var order = _context.Orders
+                    .Include(o => o.OrderDetails)
+                    .FirstOrDefault(o => o.OrderID == orderId);
+
                 if (order == null)
                     return Json(new PaymentURLResponseData { ResponseCode = -1, Description = "Đơn hàng không tồn tại" });
+
                 var cacheKeyUser = $"PaymentUser_{orderId}";
                 _cache.Set(cacheKeyUser, order.EmployeeID, TimeSpan.FromMinutes(30));
-                // 1. Lấy cấu hình PaymentInfo
+
+                // ================== 🔥 TÍNH TIỀN ==================
+                var subtotal = order.OrderDetails.Sum(x => x.UnitPrice * x.Quantity);
+
+                decimal shipping = request.District switch
+                {
+                    "BaDinh" => 15000,
+                    "HoanKiem" => 15000,
+                    "DongDa" => 18000,
+                    "HaiBaTrung" => 18000,
+                    "CauGiay" => 20000,
+                    "ThanhXuan" => 20000,
+                    "HoangMai" => 22000,
+                    "LongBien" => 25000,
+                    "HaDong" => 30000,
+                    "NamTuLiem" => 25000,
+                    "BacTuLiem" => 25000,
+                    _ => 0
+                };
+
+                decimal discount = 0;              
+                var total = subtotal + shipping - discount;
+
+                // (optional) lưu lại DB
+                order.TotalAmount = total;
+                // =================================================
+
+                // 1. Lấy cấu hình
                 var merchantAcc = Config.AppSettings.Get("AppSettings:PaymentInfo:MerchantAccount");
                 var websiteID = Config.AppSettings.Get("AppSettings:PaymentInfo:WebsiteID");
                 var secretKey = Config.AppSettings.Get("AppSettings:PaymentInfo:PublicKey");
@@ -50,14 +91,31 @@ namespace QLCafeHV.Controllers
                 order.OrderCode = orderCode;
                 _context.SaveChanges();
 
-                // 3. Tạo signature
-                var signPlainText = $"{websiteID}|{(long)request.Amount}|{merchantAcc}|{orderCode}|VND|{secretKey}";
-                var signature = Encrypt.SHA256encrypt(signPlainText);
-                //4.Tạo URL trả về
-               var urlReturn = $"{returnURL}?smartcardserial={request.SmartcardSerial}" +
-                               $"&orgTransId={orderCode}&package={request.Package}&months={request.Months}";
+                var deliveryCacheKey = $"Delivery_{orderCode}";
 
-                // 5. Kiểm tra trùng đơn hàng bằng MemoryCache
+                var deliveryInfo = new OrderDeliveryModel
+                {
+                    OrderID = order.OrderID,
+                    FullName = request.FullName,
+                    Phone = request.Phone,
+                    Address = request.Address,
+                    District = request.District,
+                    ShippingFee = shipping, // bạn đã tính ở backend
+
+                };
+
+                _cache.Set(deliveryCacheKey, deliveryInfo, TimeSpan.FromMinutes(30));
+
+                // ================== 🔥 SỬA SIGNATURE ==================
+                var signPlainText = $"{websiteID}|{(long)total}|{merchantAcc}|{orderCode}|VND|{secretKey}";
+                var signature = Encrypt.SHA256encrypt(signPlainText);
+                // =====================================================
+
+                // 4. URL return
+                var urlReturn = $"{returnURL}?smartcardserial={request.SmartcardSerial}" +
+                                $"&orgTransId={orderCode}&package={request.Package}&months={request.Months}";
+
+                // 5. Check trùng
                 var cacheKey = $"Order_{orderCode}";
                 if (_cache.TryGetValue(cacheKey, out _))
                 {
@@ -68,25 +126,25 @@ namespace QLCafeHV.Controllers
                     });
                 }
 
-                // 6. Tạo object request gửi sang VTC Pay
+                // ================== 🔥 REQUEST VTC ==================
                 var requestPaymentUrl = new
                 {
                     CustomerID = "",
                     Lang = "vi",
                     UrlReturn = urlReturn,
-                    PaymentType = request.PayType.ToString(), 
+                    PaymentType = request.PayType,
                     WebsiteID = long.Parse(websiteID),
                     Description = $"{request.SmartcardSerial}|{orderCode}|{request.Package}|{request.Months}|{request.PromotionId}|{request.PromotionPackage}",
-                    Amount = (long)request.Amount,
+                    Amount = (long)total,   // 🔥 dùng total backend
                     ReceiverAccount = merchantAcc,
                     OrderCode = orderCode,
                     Currency = "VND",
                     Signature = signature.ToUpper()
                 };
+                // ====================================================
 
                 var apiUrl = $"{urlPortalApis}/GeneratePaymentURL";
 
-                // 7. Gọi API VTC Pay
                 var responseURL = await _httpClientFactory.PortalAPIs()
                     .PostAsync<PaymentURLResponseData>(requestPaymentUrl, apiUrl);
 
@@ -99,13 +157,11 @@ namespace QLCafeHV.Controllers
                     });
                 }
 
-                // 8. Lưu MemoryCache 15 phút chống trùng
                 var keepMinutes = int.Parse(Config.AppSettings.Get("AppSettings:PaymentInfo:KeepTransactionMin") ?? "15");
                 _cache.Set(cacheKey, requestPaymentUrl.Description,
                     new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(keepMinutes)));
 
-                // 9. Trả kết quả cho JS
                 return Json(responseURL);
             }
             catch (Exception ex)
@@ -117,33 +173,56 @@ namespace QLCafeHV.Controllers
                 });
             }
         }
-       
+
         [HttpGet("ReturnFromVTC")]
-        public IActionResult ReturnFromVTC( string orgTransId)
+        public IActionResult ReturnFromVTC(string orgTransId)
         {
             // 1. Lấy order
             var order = _context.Orders.FirstOrDefault(o => o.OrderCode == orgTransId);
             if (order == null)
                 return Content("Không tìm thấy đơn hàng!");
 
-            // 2. Tạo payment
+            // 2. Lấy delivery từ cache
+            var deliveryCacheKey = $"Delivery_{orgTransId}";
+            if (!_cache.TryGetValue(deliveryCacheKey, out OrderDeliveryModel delivery))
+            {
+                return Content("Không tìm thấy thông tin giao hàng!");
+            }
+
+            // 3. Lưu Delivery
+            var newDelivery = new OrderDeliveryModel
+            {
+                OrderID = order.OrderID,
+                FullName = delivery.FullName,
+                Phone = delivery.Phone,
+                Address = delivery.Address,
+                District = delivery.District,
+                ShippingFee = delivery.ShippingFee,
+            };
+
+            _context.Add(newDelivery);
+
+            var subtotal = _context.OrderDetails.Where(x => x.OrderID == order.OrderID).Sum(x => x.TotalPrice);
+            // 4. Tạo payment
             var payment = new PaymentModel
             {
                 OrderID = order.OrderID,
-                PaidAmount = order.TotalAmount,
+                PaidAmount = subtotal,
                 PaymentMethod = "Chuyển khoản qua cổng VTC PAY",
                 PaymentTime = DateTime.Now
             };
 
             _context.Payments.Add(payment);
 
-            // 3. Update trạng thái Order
+            // 5. Update trạng thái Order
             order.Status = "Đã thanh toán";
 
-            // 4. Lưu DB
+            // 6. Lưu DB
             _context.SaveChanges();
 
-            // 6. Trả về trang user
+            // 7. Xóa cache
+            _cache.Remove(deliveryCacheKey);
+
             return RedirectToAction("Index", "Home");
         }
     }

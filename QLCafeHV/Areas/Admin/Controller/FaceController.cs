@@ -46,8 +46,8 @@ namespace QLCafeHV.Areas.Admin.Controllers
 
                 if (flaskResult != null && flaskResult.success)
                 {
-                    var employee = _context.Employees
-                        .FirstOrDefault(x => x.EmployeeID == request.EmployeeId);
+                    var employee = _context.Employees.FirstOrDefault(x => x.EmployeeID == request.EmployeeId
+                       && x.Role == "Employee");
 
                     if (employee != null)
                     {

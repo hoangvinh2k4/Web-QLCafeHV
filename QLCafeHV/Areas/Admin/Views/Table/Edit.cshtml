@@ -8,7 +8,7 @@
 <h2>Chỉnh sửa bàn</h2>
 
 <form id="editForm" enctype="multipart/form-data">
-    <input type="hidden" asp-for="TableID" />
+    <input type="hidden" id="TableID" value="@Model.TableID" />
 
     <div class="form-group">
         <label>Tên bàn</label>
@@ -18,18 +18,30 @@
 </form>
 
 @section Scripts {
-    <script>      
+    <script>
         $("#btnSave").click(function () {
 
-            let form = $("#editForm")[0];
-            let formData = new FormData(form);
+            let id = $("#TableID").val();
+            let tableName = $("#TableName").val();
+
+            // validate
+            if (!tableName) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Thiếu dữ liệu",
+                    text: "Vui lòng nhập tên bàn"
+                });
+                return;
+            }
 
             $.ajax({
-                url: "@Url.Action("Edit", "Table", new { area = "Admin" })",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
+                url: "/api/TableApi/" + id, 
+                type: "PUT",                 
+                contentType: "application/json",
+                data: JSON.stringify({
+                    tableName: tableName
+                }),
+
                 success: function (res) {
 
                     if (res.success) {
@@ -53,6 +65,7 @@
                         });
                     }
                 },
+
                 error: function () {
                     Swal.fire({
                         icon: "error",
@@ -62,7 +75,6 @@
                 }
             });
         });
-
     </script>
 }
 

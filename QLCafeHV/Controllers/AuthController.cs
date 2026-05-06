@@ -81,7 +81,7 @@ namespace QLCafeHV.Controllers
         public IActionResult Register() => View();
 
         [HttpPost]
-        public IActionResult Register(string fullname, string phone, string username, string password)
+        public IActionResult Register(string fullname, string phone, string username,string cccd, string address, string email, string password)
         {
             string role = "User";
 
@@ -95,10 +95,22 @@ namespace QLCafeHV.Controllers
                 return Json(new { success = false, message = "Số điện thoại đã tồn tại!" });
             }
 
+            if (_context.Employees.Any(e => e.Cccd == cccd))
+            {
+                return Json(new { success = false, message = "Căn cước công dân đã tồn tại!" });
+            }
+
+            if (_context.Accounts.Any(e => e.Email == email))
+            {
+                return Json(new { success = false, message = "Email đã tồn tại!" });
+            }
+
             var emp = new EmployeeModel
             {
                 FullName = fullname,
                 Phone = phone,
+                Cccd = cccd,
+                Address = address,
                 Role = role,
                 Status = 1
             };
@@ -113,6 +125,7 @@ namespace QLCafeHV.Controllers
                 EmployeeID = emp.EmployeeID,
                 Username = username,
                 PasswordHash = passwordHasher.HashPassword(null, password),
+                Email = email,
                 Role = role,
                 Status = 1
             };

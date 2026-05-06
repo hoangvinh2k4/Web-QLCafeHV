@@ -52,25 +52,62 @@
 
 </section>
 
-<!-- Container 2 cột dưới slider -->
-<div class="container">
-    <aside class="sidebar">
-        <section class="filter-group">
-            <h3 class="feature-title orange-text">MENU</h3>
-            <ul>
-                <li><a href="#">CÀ PHÊ</a></li>
-                <li><a href="#">TRÀ SỮA</a></li>
-                <li><a href="#">BÁNH NGỌT</a></li>
-                <li><a href="#">ĐỒ ĂN VẶT</a></li>
-            </ul>
-        </section>
-    </aside>
+<div class="bg-surface text-on-surface">
 
-    <main class="product-area">
-        <div id="productContainer">
-        </div>
-    </main>
-</div>
+    <div class="flex w-full">
+
+        <!-- SIDEBAR -->
+        <aside class="w-64 sticky top-0 h-screen bg-[#fbf9f4] dark:bg-stone-950 flex flex-col px-4 py-4">
+            <div class="mb-8 px-4">
+                <h3 class="font-['Manrope'] text-sm uppercase tracking-widest text-[#765a1f] dark:text-[#c6a361] font-bold">Collections</h3>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/60">Artisanal Selection</p>
+            </div>
+
+            <nav class="flex flex-col gap-1">
+
+                <!-- Menu -->
+                <a onclick="scrollToCategory('')"
+                   class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                    <span>Menu</span>
+                </a>
+
+                <!-- Cà phê -->
+                <a onclick="scrollToCategory('Cà phê')"
+                   class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                    <span>Cà phê</span>
+                </a>
+
+                <!-- Bánh ngọt -->
+                <a onclick="scrollToCategory('Bánh ngọt')"
+                   class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                    <span>Bánh ngọt</span>
+                </a>
+
+                <!-- Đồ ăn vặt -->
+                <a onclick="scrollToCategory('Đồ ăn vặt')"
+                   class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                    <span>Đồ ăn vặt</span>
+                </a>
+
+                <!-- Nước ép -->
+                <a onclick="scrollToCategory('Nước ép')"
+                   class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                    <span>Nước ép</span>
+                </a>
+
+                <!-- Trà sữa -->
+                <a onclick="scrollToCategory('Trà sữa')"
+                   class="flex items-center gap-3 px-4 py-3 cursor-pointer">
+                    <span>Trà sữa</span>
+                </a>
+
+            </nav>
+        </aside>
+        <!-- Main Content Area -->
+        <div id="productContainer" class="flex-1 overflow-hidden"></div>
+    </div>
+ </div>
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 @section Scripts {
@@ -101,10 +138,11 @@
 
         function loadProducts() {
             $.ajax({
-                url: "/Home/LoadProducts", // Action trả về Partial _ProductList.cshtml
+                url: "/Home/LoadProducts", 
                 method: "GET",
                 success: function (html) {
                     $("#productContainer").html(html);
+                    initSlider();
                 }
             });
         }
@@ -112,6 +150,21 @@
         // Gọi khi trang vừa load
         $(document).ready(function () {
             loadProducts();
-        });
+        }); 
+                function scrollToCategory(category) {
+            if (category === "") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+            }
+
+            const el = document.getElementById("category-" + category);
+
+            if (el) {
+                el.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            }
+        }
     </script>
 }
